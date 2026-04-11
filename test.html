@@ -1347,11 +1347,21 @@ async function submitApp() {
     return;
   }
 
-  alert('✅ 제출 완료! 접수번호: ' + receipt + '\nSupabase에서 확인하세요.');
-  const display = document.getElementById('receipt-display');
-  if (display) display.textContent = receipt;
-  goStep(3);
+  // submitApp() 안에서 receipt 생성 부분을 아래로 교체
+const ym = new Date().toISOString().slice(0,7).replace('-','');
+const { data: seqData } = await sb
+  .from('dasibom_applications')
+  .select('receipt_number')
+  .like('receipt_number', `DB-${ym}-%`)
+  .order('receipt_number', { ascending: false })
+  .limit(1);
+
+let seq = 1;
+if (seqData && seqData.length > 0) {
+  const lastSeq = parseInt(seqData[0].receipt_number.split('-')[2]) || 0;
+  seq = lastSeq + 1;
 }
+const receipt = `DB-${ym}-${String(seq).padStart(3,'0')}`;
 
 document.addEventListener('DOMContentLoaded', () => {
   renderHexaco();
