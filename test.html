@@ -1269,17 +1269,70 @@ async function submitApp() {
 
   const receipt = 'DB-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + (Math.floor(Math.random()*90000)+10000);
 
-  const formData = collectFormData();
+  // 폼에서 직접 수집
+  function getRadio(name) {
+    const sel = document.querySelector(`.radio-btn.selected input[name="${name}"]`);
+    return sel ? sel.closest('.radio-btn').textContent.trim() : '';
+  }
+  function collectDebtRows() {
+    const rows = [];
+    document.querySelectorAll('#all-debt-tbody tr').forEach(tr => {
+      const cells = tr.querySelectorAll('td');
+      if (!cells.length) return;
+      const 기관유형 = cells[0]?.querySelector('select')?.value || '';
+      const 기관명   = cells[2]?.querySelector('input')?.value  || '';
+      const 원금     = parseFloat(cells[3]?.querySelector('input')?.value) || 0;
+      const 잔액     = parseFloat(cells[4]?.querySelector('input')?.value) || 0;
+      const 월상환   = parseFloat(cells[5]?.querySelector('input')?.value) || 0;
+      const 금리     = cells[6]?.querySelector('select')?.value || '';
+      if (기관명 || 잔액) rows.push({기관유형,기관명,원금,잔액,월상환,금리});
+    });
+    return rows;
+  }
+
+  const inc_work  = parseFloat(document.getElementById('inc-work')?.value)  || 0;
+  const inc_biz   = parseFloat(document.getElementById('inc-biz')?.value)   || 0;
+  const inc_gov   = parseFloat(document.getElementById('inc-gov')?.value)   || 0;
+  const inc_etc   = parseFloat(document.getElementById('inc-etc')?.value)   || 0;
+
+  const formData = {
+    성명:            document.getElementById('applicant-name')?.value || '',
+    소득유형:        getRadio('inc-type'),
+    직장유지가능성:  getRadio('inc-sustain'),
+    소득전망:        getRadio('inc-change'),
+    소득_근로:       inc_work,
+    소득_사업:       inc_biz,
+    소득_정부지원:   inc_gov,
+    소득_가족기타:   inc_etc,
+    지출_주거:       parseFloat(document.getElementById('exp-rent')?.value)    || 0,
+    지출_교통:       parseFloat(document.getElementById('exp-transit')?.value) || 0,
+    지출_통신:       parseFloat(document.getElementById('exp-comm')?.value)    || 0,
+    지출_의료:       parseFloat(document.getElementById('exp-medical')?.value) || 0,
+    지출_보험:       parseFloat(document.getElementById('exp-ins')?.value)     || 0,
+    지출_부채상환:   parseFloat(document.getElementById('exp-loan')?.value)    || 0,
+    지출_저축:       parseFloat(document.getElementById('exp-save')?.value)    || 0,
+    지출_기타:       parseFloat(document.getElementById('exp-etc')?.value)     || 0,
+    부채_명세:       JSON.stringify(collectDebtRows()),
+    채무조정이력:    getRadio('dadj'),
+    연체여부:        getRadio('util-late'),
+    가구원수:        parseInt(getRadio('hh')) || 1,
+    신청금액:        parseFloat(document.getElementById('loan-amount')?.value) || 0,
+    대출목적:        getRadio('elig-purpose') || '',
+    Q1_신청배경:     document.querySelector('textarea')?.value || '',
+    Q2_사용상환계획: document.getElementById('q2-textarea')?.value || '',
+    자격_연체없음:   '충족',
+    자격_체납없음:   '충족',
+  };
 
   const { error } = await sb.from('dasibom_applications').insert({
     receipt_number:      receipt,
-    name:                formData['성명'] || document.getElementById('applicant-name')?.value || '테스트',
+    name:                formData['성명'] || 'TEST',
     loan_amount:         formData['신청금액'],
     loan_purpose:        formData['대출목적'],
-    income_work:         formData['소득_근로'],
-    income_biz:          formData['소득_사업'],
-    income_gov:          formData['소득_정부지원'],
-    income_other:        formData['소득_가족기타'],
+    income_work:         inc_work,
+    income_biz:          inc_biz,
+    income_gov:          inc_gov,
+    income_other:        inc_etc,
     qual_age:            true,
     qual_low_credit:     true,
     qual_no_overdue:     true,
@@ -1294,9 +1347,9 @@ async function submitApp() {
     return;
   }
 
+  alert('✅ 제출 완료! 접수번호: ' + receipt + '\nSupabase에서 확인하세요.');
   const display = document.getElementById('receipt-display');
   if (display) display.textContent = receipt;
-  alert('✅ 제출 완료! 접수번호: ' + receipt + '\nSupabase에서 확인하세요.');
   goStep(3);
 }
 
