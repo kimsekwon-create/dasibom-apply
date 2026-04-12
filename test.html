@@ -1262,7 +1262,7 @@ async function submitApp() {
   }
 
   const SUPABASE_URL  = 'https://xzuohrgebuudkfjxfghh.supabase.co';
-  const SUPABASE_ANON = 'sb_publishable_TwfQsfD7DsumMNixeAlABg_ClwcKXxR';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6dW9ocmdlYnV1ZGtmanhmZ2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTEzOTksImV4cCI6MjA5MTQ4NzM5OX0.2hkGJ2IbafzVIiOKtHVbhET7fd-1dHj8ACMX7JMsQpM';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
   });
