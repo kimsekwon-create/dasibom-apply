@@ -1287,6 +1287,37 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ════════════════════════════════════════
+//  파일 업로드 (Supabase Storage)
+// ════════════════════════════════════════
+async function uploadFiles(receipt) {
+  const fileInputs = [
+    { id: 'eq4-file-name',   inputSelector: '#eq4-card input[type="file"]',   label: '부결증명서' },
+    { id: 'dadj-file-name',  inputSelector: '#dadj-ing input[type="file"]',   label: '채무조정확인서' },
+  ];
+
+  const MAX_SIZE = 26214400; // 25MB
+  const errors = [];
+
+  for (const item of fileInputs) {
+    const input = document.querySelector(item.inputSelector);
+    if (!input || !input.files.length) continue;
+
+    for (const file of input.files) {
+      if (file.size > MAX_SIZE) {
+        errors.push(`${item.label}: 파일 크기가 25MB를 초과합니다 (${file.name})`);
+        continue;
+      }
+      const path = `${receipt}/${item.label}_${file.name}`;
+      const { error } = await sb.storage
+        .from('dasibom-files')
+        .upload(path, file, { upsert: true });
+      if (error) errors.push(`${item.label} 업로드 실패: ${error.message}`);
+    }
+  }
+  return errors;
+}
+
+// ════════════════════════════════════════
 //  Supabase 설정
 // ════════════════════════════════════════
 const SUPABASE_URL  = 'https://xzuohrgebuudkfjxfghh.supabase.co';
@@ -1407,6 +1438,12 @@ async function submitApp() {
     alert('제출 중 오류가 발생했습니다.\n' + error.message);
     if (btn) { btn.disabled = false; btn.textContent = '✉️ 신청서 최종 제출'; }
     return;
+  }
+
+  // 파일 업로드
+  const uploadErrors = await uploadFiles(receipt);
+  if (uploadErrors.length) {
+    console.warn('파일 업로드 일부 실패:', uploadErrors);
   }
 
   const display = document.getElementById('receipt-display');
