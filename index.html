@@ -1697,6 +1697,19 @@ async function submitToSupabase() {
         detectSessionInUrl: false
       }
     });
+    const now = new Date();
+    const yyyymm = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = 'DB-' + yyyymm + '-';
+    const { count, error: countError } = await client
+      .from('dasibom_applications')
+      .select('*', { count: 'exact', head: true })
+      .like('receipt_number', prefix + '%');
+    if (countError) throw countError;
+    const nextSeq = String((count || 0) + 1).padStart(3, '0');
+    payload.receipt_number = prefix + nextSeq;
+    if (payload.form_data && typeof payload.form_data === 'object') {
+      payload.form_data.receipt_number = payload.receipt_number;
+    }
     const { error } = await client.from('dasibom_applications').insert(payload);
     if (error) throw error;
 
