@@ -246,6 +246,15 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
   .btn-group { flex-direction: column; gap: 10px; }
   .btn-back { width: 100%; text-align: center; }
 }
+@media print {
+  .site-header, .progress-wrap, #save-bar,
+  #page0, #page1, #page2 { display: none !important; }
+  #page3 { display: block !important; }
+  .btn-back, button[onclick="location.reload()"] { display: none !important; }
+  #print-btn { display: none !important; }
+  body { background: #fff; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+}
 </style>
 </head>
 <body>
@@ -984,11 +993,23 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
     <div class="complete-screen">
       <div class="complete-icon">🌸</div>
       <h2>신청서가 접수되었습니다</h2>
-      <p>접수 번호: <strong id="receipt-display">—</strong><br><br>
-      담당 멘토가 영업일 2~3일 내 연락드립니다.<br>비대면 상담 후 적합한 지원 방식(대환/생활비)을 함께 결정합니다.<br><br>
-      <span style="color:var(--warning);font-size:13px">📅 서류(소득증빙, 채무조정 확인서 등)는 멘토 안내 시 제출</span><br><br>
-      <span style="font-size:12px;color:var(--text-muted)">사회연대은행 · 카카오뱅크 · 신용회복위원회</span></p>
-      <button class="btn btn-primary" style="max-width:240px;margin:28px auto 0" onclick="location.reload()">처음으로</button>
+      <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:20px 24px;margin:20px auto;max-width:400px;text-align:left;font-size:14px;line-height:2">
+        <div>접수 번호 &nbsp;<strong id="receipt-display" style="color:var(--primary)">—</strong></div>
+        <div>접수 일시 &nbsp;<span id="receipt-date" style="color:var(--text-muted)">—</span></div>
+        <div>신청자 &nbsp;&nbsp;&nbsp;&nbsp;<span id="receipt-name" style="color:var(--text-muted)">—</span></div>
+        <div>대출 용도 &nbsp;<span id="receipt-purpose" style="color:var(--text-muted)">—</span></div>
+        <div>희망 금액 &nbsp;<span id="receipt-amount" style="color:var(--text-muted)">—</span></div>
+      </div>
+      <p style="font-size:14px;color:var(--text-muted);line-height:1.8">
+        담당 멘토가 영업일 2~3일 내 연락드립니다.<br>
+        비대면 상담 후 적합한 지원 방식(대환/생활비)을 함께 결정합니다.<br><br>
+        <span style="color:var(--warning);font-size:13px">📅 서류(소득증빙, 채무조정 확인서 등)는 멘토 안내 시 제출</span><br><br>
+        <span style="font-size:12px;color:var(--text-muted)">사회연대은행 · 카카오뱅크 · 신용회복위원회</span>
+      </p>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:28px">
+        <button id="print-btn" class="btn btn-primary" style="max-width:280px" onclick="printReceipt()">🖨️ 접수증 PDF 저장</button>
+        <button class="btn-back" onclick="location.reload()">처음으로</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1715,6 +1736,23 @@ async function submitToSupabase() {
 
     const receiptDisplay = document.getElementById('receipt-display');
     if (receiptDisplay) receiptDisplay.textContent = payload.receipt_number;
+    const nowReceipt = new Date();
+    const dateStr = nowReceipt.getFullYear() + '.' +
+      String(nowReceipt.getMonth()+1).padStart(2,'0') + '.' +
+      String(nowReceipt.getDate()).padStart(2,'0') + ' ' +
+      String(nowReceipt.getHours()).padStart(2,'0') + ':' +
+      String(nowReceipt.getMinutes()).padStart(2,'0');
+    const purposeMap = { refinance: '고금리 대환대출', living: '생활비 대출' };
+
+    const nameEl = document.getElementById('receipt-name');
+    const dateEl = document.getElementById('receipt-date');
+    const purposeEl = document.getElementById('receipt-purpose');
+    const amountEl = document.getElementById('receipt-amount');
+
+    if (nameEl) nameEl.textContent = payload.name || '—';
+    if (dateEl) dateEl.textContent = dateStr;
+    if (purposeEl) purposeEl.textContent = purposeMap[payload.loan_purpose] || payload.loan_purpose || '—';
+    if (amountEl) amountEl.textContent = payload.loan_amount ? payload.loan_amount + ' 만원' : '—';
     clearDraft();
     goStep(3);
   } catch (error) {
@@ -1724,6 +1762,10 @@ async function submitToSupabase() {
       submitBtn.textContent = originalText;
     }
   }
+}
+
+function printReceipt() {
+  window.print();
 }
 
 // ── 제출 시 전체 필수항목 검증 (번호 순서) ──
