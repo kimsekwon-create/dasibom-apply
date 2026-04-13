@@ -1635,11 +1635,22 @@ function collectFrdiScores() {
   return scores;
 }
 
+function getRadioValue(name) {
+  const sel = document.querySelector(`.radio-btn.selected input[name="${name}"]`);
+  if (!sel) return '';
+  return sel.closest('.radio-btn').textContent.trim();
+}
+
+function getTextareaValue(el) {
+  if (!el) return '';
+  const val = el.value.trim();
+  if (!val) return '';
+  if (val === el.placeholder.trim()) return '';
+  if (val.startsWith('예)') || val.startsWith('예 )')) return '';
+  return el.value;
+}
+
 function collectPayload() {
-  function getRadioValue(name) {
-    const selected = document.querySelector('#page2 .radio-btn.selected input[name="' + name + '"]');
-    return selected ? selected.value : null;
-  }
   function getIntValue(selector) {
     const el = document.querySelector(selector);
     if (!el) return null;
@@ -1654,6 +1665,14 @@ function collectPayload() {
   const incomeType = incomeTypeGroup
     ? Array.from(incomeTypeGroup.querySelectorAll('.check-btn.selected')).map(btn => btn.textContent.trim()).join(',')
     : '';
+  let loanPurpose = '';
+  document.querySelectorAll('input[name="elig-purpose"]').forEach(inp => {
+    if (inp.closest('.radio-btn')?.classList.contains('selected')) loanPurpose = inp.value;
+  });
+  if (!loanPurpose) {
+    const checked = document.querySelector('input[name="elig-purpose"]:checked');
+    if (checked) loanPurpose = checked.value;
+  }
 
   const base = {
     receipt_number: receipt,
@@ -1665,7 +1684,7 @@ function collectPayload() {
     addr_detail: document.getElementById('addr-detail')?.value || '',
     residence_type: getRadioValue('res'),
     household_size: getRadioValue('hh'),
-    loan_purpose: getRadioValue('elig-purpose'),
+    loan_purpose: loanPurpose,
     loan_amount: getIntValue('#loan-amount'),
     income_type: incomeType,
     income_work: getIntValue('#inc-work'),
@@ -1688,9 +1707,9 @@ function collectPayload() {
     qual_low_credit: true,
     qual_no_overdue: true,
     qual_no_delinquency: true,
-    q1_background: document.getElementById('ta-bg-reason')?.value || '',
-    q1_future: textareas[1]?.value || '',
-    q2_repay_plan: document.getElementById('ta-loan-plan')?.value || '',
+    q1_background: getTextareaValue(document.getElementById('ta-bg-reason')),
+    q1_future: getTextareaValue(textareas[1]),
+    q2_repay_plan: getTextareaValue(document.getElementById('ta-loan-plan')),
     util_late: getRadioValue('util-late'),
     frdi_scores: collectFrdiScores()
   };
