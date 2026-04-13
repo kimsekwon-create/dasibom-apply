@@ -1729,7 +1729,8 @@ async function uploadFiles(client, receiptNumber, files) {
 
   for (const file of files.rejectionFiles) {
     console.log('업로드 시도:', file.name, file.size);
-    const path = `${receiptNumber}/rejection/${Date.now()}_${file.name}`;
+    const ext = file.name.split('.').pop();
+    const path = `${receiptNumber}_rejection_${Date.now()}.${ext}`;
     const { data, error } = await client.storage
       .from('dasibom-files')
       .upload(path, file, { upsert: true });
@@ -1739,7 +1740,8 @@ async function uploadFiles(client, receiptNumber, files) {
 
   for (const file of files.debtAdjFiles) {
     console.log('업로드 시도:', file.name, file.size);
-    const path = `${receiptNumber}/debt-adj/${Date.now()}_${file.name}`;
+    const ext = file.name.split('.').pop();
+    const path = `${receiptNumber}_debtadj_${Date.now()}.${ext}`;
     const { data, error } = await client.storage
       .from('dasibom-files')
       .upload(path, file, { upsert: true });
