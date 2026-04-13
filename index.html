@@ -1255,7 +1255,6 @@ function updateSurveyProgress() {
   document.getElementById('prog-fill').style.width=pct+'%'; document.getElementById('prog-pct').textContent=pct+'%';
 }
 
-function submitApp() { if (!document.getElementById('final-consent').checked) { alert('최종 동의를 체크해 주세요.'); return; } goStep(3); }
 
 document.addEventListener('DOMContentLoaded', () => {
   renderHexaco();
@@ -1428,7 +1427,6 @@ async function submitApp() {
   const btn = document.querySelector('button[onclick="submitApp()"]');
   if (btn) { btn.disabled = true; btn.textContent = '제출 중...'; }
 
-  const receipt  = generateReceipt();
   const receipt = await generateReceipt();
 
   const { error } = await sb.from('dasibom_applications').insert({
@@ -1459,5 +1457,6 @@ async function submitApp() {
   if (display) display.textContent = receipt;
   goStep(3);
 }
+</script>
 </body>
 </html>
