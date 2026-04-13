@@ -1738,11 +1738,16 @@ async function submitToSupabase() {
       }
     });
     const now = new Date();
-    const pad = n => String(n).padStart(2,'0');
-    const datePart = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate());
-    const timePart = pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-    const randPart = String(Math.floor(Math.random()*90)+10);
-    payload.receipt_number = `DB-${datePart}-${timePart}-${randPart}`;
+    const yyyymm = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0');
+    const prefix = `DB-${yyyymm}-`;
+
+    const { count, error: countError } = await client
+      .from('dasibom_applications')
+      .select('*', { count: 'exact', head: true })
+      .like('receipt_number', prefix + '%');
+
+    if (countError) throw countError;
+    payload.receipt_number = prefix + String((count || 0) + 1).padStart(3, '0');
     if (payload.form_data) payload.form_data.receipt_number = payload.receipt_number;
     const { error } = await client.from('dasibom_applications').insert(payload);
     if (error) throw error;
