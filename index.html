@@ -1781,6 +1781,9 @@ async function submitToSupabase() {
 
     // 파일 업로드
     const files = collectFiles();
+    console.log('files.rejectionFiles:', files.rejectionFiles);
+    console.log('files.debtAdjFiles:', files.debtAdjFiles);
+    console.log('hasFiles:', files.rejectionFiles.length > 0 || files.debtAdjFiles.length > 0);
     const hasFiles = files.rejectionFiles.length > 0 || files.debtAdjFiles.length > 0;
     let fileResults = { rejection: [], debtAdj: [] };
     if (hasFiles) {
