@@ -1714,6 +1714,38 @@ function collectPayload() {
   return { ...base, form_data: { ...base } };
 }
 
+function collectFiles() {
+  const rejectionFiles = Array.from(
+    document.querySelectorAll('#eq4-attach input[type="file"]')[0]?.files || []
+  );
+  const debtAdjFiles = Array.from(
+    document.querySelector('#dadj-ing input[type="file"]')?.files || []
+  );
+  return { rejectionFiles, debtAdjFiles };
+}
+
+async function uploadFiles(client, receiptNumber, files) {
+  const results = { rejection: [], debtAdj: [] };
+
+  for (const file of files.rejectionFiles) {
+    const path = `${receiptNumber}/rejection/${Date.now()}_${file.name}`;
+    const { error } = await client.storage
+      .from('dasibom-files')
+      .upload(path, file);
+    if (!error) results.rejection.push(path);
+  }
+
+  for (const file of files.debtAdjFiles) {
+    const path = `${receiptNumber}/debt-adj/${Date.now()}_${file.name}`;
+    const { error } = await client.storage
+      .from('dasibom-files')
+      .upload(path, file);
+    if (!error) results.debtAdj.push(path);
+  }
+
+  return results;
+}
+
 async function submitToSupabase() {
   const SUPABASE_URL = 'https://xzuohrgebuudkfjxfghh.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6dW9ocmdlYnV1ZGtmanhmZ2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTEzOTksImV4cCI6MjA5MTQ4NzM5OX0.2hkGJ2IbafzVIiOKtHVbhET7fd-1dHj8ACMX7JMsQpM';
@@ -1734,13 +1766,33 @@ async function submitToSupabase() {
         detectSessionInUrl: false
       }
     });
-    const { data: insertData, error } = await client
+    // insert
+    const { data: insertData, error: insertError } = await client
       .from('dasibom_applications')
       .insert(payload)
-      .select('receipt_number')
+      .select('receipt_number, id')
       .single();
-    if (error) throw error;
+    if (insertError) throw insertError;
     payload.receipt_number = insertData.receipt_number;
+
+    // 파일 업로드
+    const files = collectFiles();
+    const hasFiles = files.rejectionFiles.length > 0 || files.debtAdjFiles.length > 0;
+    let fileResults = { rejection: [], debtAdj: [] };
+    if (hasFiles) {
+      fileResults = await uploadFiles(client, insertData.receipt_number, files);
+    }
+
+    // 파일 경로 업데이트
+    if (hasFiles) {
+      await client
+        .from('dasibom_applications')
+        .update({
+          file_rejection_proof: fileResults.rejection.length ? fileResults.rejection : null,
+          file_debt_adjustment: fileResults.debtAdj.length ? fileResults.debtAdj : null
+        })
+        .eq('id', insertData.id);
+    }
 
     document.getElementById('receipt-display').textContent = payload.receipt_number;
     const nowReceipt = new Date();
