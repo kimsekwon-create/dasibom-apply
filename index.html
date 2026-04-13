@@ -1426,6 +1426,7 @@ async function submitApp() {
   const btn = document.querySelector('button[onclick="submitApp()"]');
   if (btn) { btn.disabled = true; btn.textContent = '제출 중...'; }
 
+  const formData = collectFormData();
   const receipt = await generateReceipt();
 
   const { error } = await sb.from('dasibom_applications').insert({
