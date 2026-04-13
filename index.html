@@ -1731,7 +1731,7 @@ async function uploadFiles(client, receiptNumber, files) {
     const path = `${receiptNumber}/rejection/${Date.now()}_${file.name}`;
     const { error } = await client.storage
       .from('dasibom-files')
-      .upload(path, file);
+      .upload(path, file, { upsert: true });
     if (!error) results.rejection.push(path);
   }
 
@@ -1739,7 +1739,7 @@ async function uploadFiles(client, receiptNumber, files) {
     const path = `${receiptNumber}/debt-adj/${Date.now()}_${file.name}`;
     const { error } = await client.storage
       .from('dasibom-files')
-      .upload(path, file);
+      .upload(path, file, { upsert: true });
     if (!error) results.debtAdj.push(path);
   }
 
