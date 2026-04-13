@@ -6,6 +6,7 @@
 <title>프로젝트 다시, 봄 — 청년 대출 신청</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --primary: #1E1E1E;
@@ -983,7 +984,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
     <div class="complete-screen">
       <div class="complete-icon">🌸</div>
       <h2>신청서가 접수되었습니다</h2>
-      <p>접수 번호: <strong>DASIBOM-2026-{번호}</strong><br><br>
+      <p>접수 번호: <strong id="receipt-display">—</strong><br><br>
       담당 멘토가 영업일 2~3일 내 연락드립니다.<br>비대면 상담 후 적합한 지원 방식(대환/생활비)을 함께 결정합니다.<br><br>
       <span style="color:var(--warning);font-size:13px">📅 서류(소득증빙, 채무조정 확인서 등)는 멘토 안내 시 제출</span><br><br>
       <span style="font-size:12px;color:var(--text-muted)">사회연대은행 · 카카오뱅크 · 신용회복위원회</span></p>
@@ -1577,8 +1578,143 @@ function clearDraft() {
   localStorage.removeItem(SAVE_KEY);
 }
 
+function collectDebtRows() {
+  const rows = [];
+  document.querySelectorAll('#all-debt-tbody tr').forEach(tr => {
+    const selects = tr.querySelectorAll('select');
+    const textInputs = tr.querySelectorAll('input[type="text"]');
+    const numberInputs = tr.querySelectorAll('input[type="number"]');
+    const monthInputs = tr.querySelectorAll('input[type="month"]');
+
+    const orgName = (textInputs[0]?.value || '').trim();
+    const balanceRaw = (numberInputs[1]?.value || '').trim();
+    if (!orgName && !balanceRaw) return;
+
+    rows.push({
+      lender_type: selects[0]?.value || null,
+      product_type: selects[1]?.value || null,
+      org_name: orgName || null,
+      contract_amt: numberInputs[0]?.value ? parseInt(numberInputs[0].value, 10) : null,
+      balance_amt: numberInputs[1]?.value ? parseInt(numberInputs[1].value, 10) : null,
+      monthly_pay: numberInputs[2]?.value ? parseInt(numberInputs[2].value, 10) : null,
+      rate_band: selects[2]?.value || null,
+      start_month: monthInputs[0]?.value || null,
+      end_month: monthInputs[1]?.value || null
+    });
+  });
+  return rows;
+}
+
+function collectFrdiScores() {
+  const scores = [];
+  document.querySelectorAll('#hexaco-questions .likert-options').forEach(opts => {
+    const selected = opts.querySelector('.likert-opt.selected');
+    scores.push(selected ? parseInt(selected.textContent.trim(), 10) : null);
+  });
+  return scores;
+}
+
+function collectPayload() {
+  function getRadioValue(name) {
+    const selected = document.querySelector('#page2 .radio-btn.selected input[name="' + name + '"]');
+    return selected ? selected.value : null;
+  }
+  function getIntValue(selector) {
+    const el = document.querySelector(selector);
+    if (!el) return null;
+    const v = (el.value || '').trim();
+    return v ? parseInt(v, 10) : null;
+  }
+  const now = new Date();
+  const receipt = 'DB-' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+  const page2 = document.getElementById('page2');
+  const textareas = page2 ? page2.querySelectorAll('textarea') : [];
+  const incomeTypeGroup = document.querySelectorAll('#page2 .check-group')[0];
+  const incomeType = incomeTypeGroup
+    ? Array.from(incomeTypeGroup.querySelectorAll('.check-btn.selected')).map(btn => btn.textContent.trim()).join(',')
+    : '';
+
+  const base = {
+    receipt_number: receipt,
+    name: document.querySelector('#page2 input[type="text"][placeholder*="실명"]')?.value || '',
+    ssn_front: document.querySelector('#page2 input[placeholder*="앞 6자리"]')?.value || '',
+    phone: document.querySelector('#page2 input[type="tel"]')?.value || '',
+    email: document.querySelector('#page2 input[type="email"]')?.value || '',
+    addr_road: document.getElementById('addr-road')?.value || '',
+    addr_detail: document.getElementById('addr-detail')?.value || '',
+    residence_type: getRadioValue('res'),
+    household_size: getRadioValue('hh'),
+    loan_purpose: getRadioValue('elig-purpose'),
+    loan_amount: getIntValue('#loan-amount'),
+    income_type: incomeType,
+    income_work: getIntValue('#inc-work'),
+    income_biz: getIntValue('#inc-biz'),
+    income_gov: getIntValue('#inc-gov'),
+    income_other: getIntValue('#inc-etc'),
+    debt_rows: collectDebtRows(),
+    debt_adjustment: getRadioValue('debt-adj'),
+    exp_rent: getIntValue('#exp-rent'),
+    exp_food: getIntValue('#exp-food'),
+    exp_transit: getIntValue('#exp-transit'),
+    exp_comm: getIntValue('#exp-comm'),
+    exp_medical: getIntValue('#exp-medical'),
+    exp_insure: getIntValue('#exp-insure'),
+    exp_loan: getIntValue('#exp-loan'),
+    exp_saving: getIntValue('#exp-saving'),
+    exp_etc: getIntValue('#exp-etc'),
+    qual_age: true,
+    qual_income: true,
+    qual_low_credit: true,
+    qual_no_overdue: true,
+    qual_no_delinquency: true,
+    q1_background: document.getElementById('ta-bg-reason')?.value || '',
+    q1_future: textareas[1]?.value || '',
+    q2_repay_plan: document.getElementById('ta-loan-plan')?.value || '',
+    util_late: getRadioValue('util-late'),
+    frdi_scores: collectFrdiScores()
+  };
+
+  return { ...base, form_data: { ...base } };
+}
+
+async function submitToSupabase() {
+  const SUPABASE_URL = 'https://xzuohrgebuudkfjxfghh.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6dW9ocmdlYnV1ZGtmanhmZ2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTEzOTksImV4cCI6MjA5MTQ4NzM5OX0.2hkGJ2IbafzVIiOKtHVbhET7fd-1dHj8ACMX7JMsQpM';
+  const submitBtn = document.querySelector('button[onclick="submitApp()"]');
+  const originalText = submitBtn ? submitBtn.textContent : '';
+
+  try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '제출 중...';
+    }
+
+    const payload = collectPayload();
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
+    const { error } = await client.from('dasibom_applications').insert(payload);
+    if (error) throw error;
+
+    const receiptDisplay = document.getElementById('receipt-display');
+    if (receiptDisplay) receiptDisplay.textContent = payload.receipt_number;
+    clearDraft();
+    goStep(3);
+  } catch (error) {
+    alert('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.\n\n오류: ' + error.message);
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  }
+}
+
 // ── 제출 시 전체 필수항목 검증 (번호 순서) ──
-function validateAndSubmit() {
+async function validateAndSubmit() {
   var checks = [];
   var firstEmpty = null;
 
@@ -1680,11 +1816,10 @@ function validateAndSubmit() {
     return;
   }
 
-  clearDraft();
-  goStep(3);
+  await submitToSupabase();
 }
 
-function submitApp() { validateAndSubmit(); }
+async function submitApp() { await validateAndSubmit(); }
 
 // ── 임시저장 버튼 ──
 function manualSave() {
