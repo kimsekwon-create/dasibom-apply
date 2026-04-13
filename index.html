@@ -1728,18 +1728,22 @@ async function uploadFiles(client, receiptNumber, files) {
   const results = { rejection: [], debtAdj: [] };
 
   for (const file of files.rejectionFiles) {
+    console.log('업로드 시도:', file.name, file.size);
     const path = `${receiptNumber}/rejection/${Date.now()}_${file.name}`;
-    const { error } = await client.storage
+    const { data, error } = await client.storage
       .from('dasibom-files')
       .upload(path, file, { upsert: true });
+    console.log('업로드 결과:', { data, error });
     if (!error) results.rejection.push(path);
   }
 
   for (const file of files.debtAdjFiles) {
+    console.log('업로드 시도:', file.name, file.size);
     const path = `${receiptNumber}/debt-adj/${Date.now()}_${file.name}`;
-    const { error } = await client.storage
+    const { data, error } = await client.storage
       .from('dasibom-files')
       .upload(path, file, { upsert: true });
+    console.log('업로드 결과:', { data, error });
     if (!error) results.debtAdj.push(path);
   }
 
