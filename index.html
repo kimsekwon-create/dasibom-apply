@@ -1657,8 +1657,6 @@ function collectPayload() {
     const v = (el.value || '').trim();
     return v ? parseInt(v, 10) : null;
   }
-  const now = new Date();
-  const receipt = 'DB-' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
   const page2 = document.getElementById('page2');
   const textareas = page2 ? page2.querySelectorAll('textarea') : [];
   const incomeTypeGroup = document.querySelectorAll('#page2 .check-group')[0];
@@ -1675,7 +1673,6 @@ function collectPayload() {
   }
 
   const base = {
-    receipt_number: receipt,
     name: document.querySelector('#page2 input[type="text"][placeholder*="실명"]')?.value || '',
     ssn_front: document.querySelector('#page2 input[placeholder*="앞 6자리"]')?.value || '',
     phone: document.querySelector('#page2 input[type="tel"]')?.value || '',
@@ -1737,23 +1734,15 @@ async function submitToSupabase() {
         detectSessionInUrl: false
       }
     });
-    const now = new Date();
-    const yyyymm = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0');
-    const prefix = `DB-${yyyymm}-`;
-
-    const { count, error: countError } = await client
+    const { data: insertData, error } = await client
       .from('dasibom_applications')
-      .select('*', { count: 'exact', head: true })
-      .like('receipt_number', prefix + '%');
-
-    if (countError) throw countError;
-    payload.receipt_number = prefix + String((count || 0) + 1).padStart(3, '0');
-    if (payload.form_data) payload.form_data.receipt_number = payload.receipt_number;
-    const { error } = await client.from('dasibom_applications').insert(payload);
+      .insert(payload)
+      .select('receipt_number')
+      .single();
     if (error) throw error;
+    payload.receipt_number = insertData.receipt_number;
 
-    const receiptDisplay = document.getElementById('receipt-display');
-    if (receiptDisplay) receiptDisplay.textContent = payload.receipt_number;
+    document.getElementById('receipt-display').textContent = payload.receipt_number;
     const nowReceipt = new Date();
     const dateStr = nowReceipt.getFullYear() + '.' +
       String(nowReceipt.getMonth()+1).padStart(2,'0') + '.' +
