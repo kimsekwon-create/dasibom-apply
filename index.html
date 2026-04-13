@@ -200,7 +200,6 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
   .score-display { flex-direction: column; text-align: center; }
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -476,7 +475,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
       <p class="section-title">01-1 · 신청자 정보</p>
       <div class="form-row">
         <label class="form-label">성명<span class="req">*</span></label>
-        <input class="form-input" type="text" placeholder="실명을 입력해 주세요" id="applicant-name">
+        <input class="form-input" type="text" placeholder="실명을 입력해 주세요">
       </div>
       <div class="form-row">
         <label class="form-label">주민등록번호<span class="req">*</span></label>
@@ -489,7 +488,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
       </div>
       <div class="form-row">
         <label class="form-label">휴대전화 번호<span class="req">*</span></label>
-        <input class="form-input" type="tel" placeholder="01012345678" id="applicant-phone">
+        <input class="form-input" type="tel" placeholder="01012345678">
       </div>
 
       <p class="section-title">01-2 · 연락처 및 주소</p>
@@ -504,7 +503,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
       </div>
       <div class="form-row">
         <label class="form-label">이메일 주소<span class="req">*</span></label>
-        <input class="form-input" type="email" placeholder="example@email.com" id="applicant-email">
+        <input class="form-input" type="email" placeholder="example@email.com">
       </div>
 
       <p class="section-title">01-3 · 거주 환경</p>
@@ -832,7 +831,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
       <div class="form-row">
         <label class="form-label">대출금을 어떻게 사용하고, 어떻게 상환할 계획인지 함께 적어주세요.<span class="req">*</span></label>
         <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">① 대출금 사용 계획 (무엇에, 얼마를 쓸 것인지) &nbsp;② 상환 계획 (어떤 소득으로, 얼마씩 갚을 것인지) &nbsp;③ 예상치 못한 상황 시 대처 방안 — 세 가지를 한 번에 적어주세요.</p>
-        <textarea class="form-textarea" id="q2-textarea" style="min-height:160px" placeholder="예) ...">
+        <textarea class="form-textarea" style="min-height:160px" placeholder="예) ① A카드론 잔액 300만 원을 전액 상환해 월 이자 부담을 줄이고, 나머지 200만 원은 밀린 관리비와 생활비를 충당할 예정입니다.&#10;② 매달 급여(약 180만 원)에서 월 상환액 15만 원을 자동이체로 납입할 계획이며, 현재 직장에서 올해 안에 정규직 전환이 예정되어 있어 소득이 안정될 전망입니다.&#10;③ 만약 소득이 줄어드는 경우, 불필요한 지출을 먼저 줄이고 담당자와 상환 일정을 협의하겠습니다.&#10;(5~10줄 권장)"></textarea>
       </div>
       <div class="form-row">
         <label class="form-label">대출 상환 자동이체 설정 동의<span class="req">*</span></label>
@@ -925,7 +924,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
     <div class="complete-screen">
       <div class="complete-icon">🌸</div>
       <h2>신청서가 접수되었습니다</h2>
-      <p>접수 번호: <strong id="receipt-display">—</strong><br><br>
+      <p>접수 번호: <strong>DASIBOM-2026-{번호}</strong><br><br>
       담당 멘토가 영업일 2~3일 내 연락드립니다.<br>비대면 상담 후 적합한 지원 방식(대환/생활비)을 함께 결정합니다.<br><br>
       <span style="color:var(--warning);font-size:13px">📅 서류(소득증빙, 채무조정 확인서 등)는 멘토 안내 시 제출</span><br><br>
       <span style="font-size:12px;color:var(--text-muted)">사회연대은행 · 카카오뱅크 · 신용회복위원회</span></p>
@@ -1283,8 +1282,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 // ════════════════════════════════════════
-//  Supabase 설정 (다시봄 전용 프로젝트)
+//  Supabase 설정
 // ════════════════════════════════════════
 const SUPABASE_URL  = 'https://xzuohrgebuudkfjxfghh.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6dW9ocmdlYnV1ZGtmanhmZ2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTEzOTksImV4cCI6MjA5MTQ4NzM5OX0.2hkGJ2IbafzVIiOKtHVbhET7fd-1dHj8ACMX7JMsQpM';
@@ -1292,67 +1292,43 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
 });
 
-// ════════════════════════════════════════
-//  접수번호 생성
-// ════════════════════════════════════════
 async function generateReceipt() {
-  const ym = new Date().toISOString().slice(0,7).replace('-',''); // '202604'
-  
-  // 해당 월 최대 순번 조회
+  const ym = new Date().toISOString().slice(0,7).replace('-','');
   const { data, error } = await sb
     .from('dasibom_applications')
     .select('receipt_number')
     .like('receipt_number', `DB-${ym}-%`)
     .order('receipt_number', { ascending: false })
     .limit(1);
-
   let seq = 1;
   if (!error && data && data.length > 0) {
-    const last = data[0].receipt_number; // 'DB-202604-007'
-    const lastSeq = parseInt(last.split('-')[2]) || 0;
+    const lastSeq = parseInt(data[0].receipt_number.split('-')[2]) || 0;
     seq = lastSeq + 1;
   }
-
   return `DB-${ym}-${String(seq).padStart(3,'0')}`;
 }
 
-// ════════════════════════════════════════
-//  신청서 데이터 수집
-// ════════════════════════════════════════
 function collectFormData() {
-  // 라디오 버튼: 선택된 항목의 텍스트 읽기
   function getRadio(name) {
     const sel = document.querySelector(`.radio-btn.selected input[name="${name}"]`);
-    if (!sel) return '';
-    return sel.closest('.radio-btn').textContent.trim();
+    return sel ? sel.closest('.radio-btn').textContent.trim() : '';
   }
-
-  // 체크박스 그룹: 선택된 항목 배열
-  function getChecks(groupEl) {
-    if (!groupEl) return [];
-    return [...groupEl.querySelectorAll('.check-btn.selected')]
-      .map(b => b.textContent.trim());
-  }
-
-  // 부채 명세 테이블 수집
   function collectDebtRows() {
     const rows = [];
     document.querySelectorAll('#all-debt-tbody tr').forEach(tr => {
       const cells = tr.querySelectorAll('td');
       if (!cells.length) return;
-      const 기관유형  = cells[0]?.querySelector('select')?.value || '';
-      const 상품유형  = cells[1]?.querySelector('select')?.value || '';
-      const 기관명    = cells[2]?.querySelector('input')?.value  || '';
-      const 원금      = parseFloat(cells[3]?.querySelector('input')?.value) || 0;
-      const 잔액      = parseFloat(cells[4]?.querySelector('input')?.value) || 0;
-      const 월상환    = parseFloat(cells[5]?.querySelector('input')?.value) || 0;
-      const 금리      = parseFloat(cells[6]?.querySelector('input')?.value) || 0;
+      const 기관유형 = cells[0]?.querySelector('select')?.value || '';
+      const 상품유형 = cells[1]?.querySelector('select')?.value || '';
+      const 기관명   = cells[2]?.querySelector('input')?.value  || '';
+      const 원금     = parseFloat(cells[3]?.querySelector('input')?.value) || 0;
+      const 잔액     = parseFloat(cells[4]?.querySelector('input')?.value) || 0;
+      const 월상환   = parseFloat(cells[5]?.querySelector('input')?.value) || 0;
+      const 금리     = parseFloat(cells[6]?.querySelector('input')?.value) || 0;
       if (기관명 || 잔액) rows.push({기관유형,상품유형,기관명,원금,잔액,월상환,금리});
     });
     return rows;
   }
-
-  // HEXACO 점수 수집
   function collectHexaco() {
     const scores = [];
     document.querySelectorAll('#hexaco-questions .likert-opt.selected').forEach(btn => {
@@ -1360,28 +1336,18 @@ function collectFormData() {
     });
     return scores;
   }
-
   return {
-    // 기본 정보
     성명:            document.getElementById('applicant-name')?.value  || '',
     연락처:          document.getElementById('applicant-phone')?.value || '',
     이메일:          document.getElementById('applicant-email')?.value || '',
     거주형태:        getRadio('res'),
-    이사계획:        getRadio('move-plan'),
     가구원수:        parseInt(getRadio('hh')) || 1,
-    부양가족유무:    getRadio('dependent'),
-    정부지원유형:    getChecks(document.querySelector('.check-group')),
-
-    // 소득
-    소득유형:        getRadio('inc-type'),
     직장유지가능성:  getRadio('inc-sustain'),
     소득전망:        getRadio('inc-change'),
     소득_근로:       parseFloat(document.getElementById('inc-work')?.value)  || 0,
     소득_사업:       parseFloat(document.getElementById('inc-biz')?.value)   || 0,
     소득_정부지원:   parseFloat(document.getElementById('inc-gov')?.value)   || 0,
     소득_가족기타:   parseFloat(document.getElementById('inc-etc')?.value)   || 0,
-
-    // 지출
     지출_주거:       parseFloat(document.getElementById('exp-rent')?.value)    || 0,
     지출_교통:       parseFloat(document.getElementById('exp-transit')?.value) || 0,
     지출_통신:       parseFloat(document.getElementById('exp-comm')?.value)    || 0,
@@ -1390,44 +1356,31 @@ function collectFormData() {
     지출_부채상환:   parseFloat(document.getElementById('exp-loan')?.value)    || 0,
     지출_저축:       parseFloat(document.getElementById('exp-saving')?.value)  || 0,
     지출_기타:       parseFloat(document.getElementById('exp-etc')?.value)     || 0,
-
-    // 부채 및 신청
     부채_명세:       JSON.stringify(collectDebtRows()),
     채무조정이력:    getRadio('debt-adj'),
-    상환유예이력:    getRadio('debt-pause'),
     연체여부:        getRadio('debt-overdue'),
     신청금액:        parseFloat(document.getElementById('loan-amount')?.value) || 0,
-    대출목적:        getRadio('elig-purpose') === '고금리 대환대출' ? '고금리 대환대출' : '생계비 대출',
-
-    // 서술형
-    Q1_신청배경:     document.querySelector('textarea[placeholder*="어떻게 시작"]')?.value || '',
+    대출목적:        document.querySelector('input[name="elig-purpose"]:checked')?.value === 'refinance' ? '고금리 대환대출' : '생계비 대출',
+    Q1_신청배경:     document.querySelectorAll('textarea')[0]?.value || '',
     Q2_사용상환계획: document.getElementById('q2-textarea')?.value || '',
-
-    // 자격
     자격_연령:       '충족',
     자격_저신용:     '충족',
     자격_연체없음:   '충족',
     자격_체납없음:   '충족',
-
-    // HEXACO
     hexaco:          collectHexaco(),
   };
 }
 
-// ════════════════════════════════════════
-//  제출 함수 (기존 submitApp 교체)
-// ════════════════════════════════════════
 async function submitApp() {
   if (!document.getElementById('final-consent').checked) {
     alert('최종 동의를 체크해 주세요.');
     return;
   }
-
   const btn = document.querySelector('button[onclick="submitApp()"]');
   if (btn) { btn.disabled = true; btn.textContent = '제출 중...'; }
 
   const formData = collectFormData();
-  const receipt = await generateReceipt();
+  const receipt  = await generateReceipt();
 
   const { error } = await sb.from('dasibom_applications').insert({
     receipt_number:      receipt,
@@ -1440,15 +1393,15 @@ async function submitApp() {
     income_other:        formData['소득_가족기타'],
     qual_age:            true,
     qual_low_credit:     true,
-    qual_no_overdue:     formData['자격_연체없음'] === '충족',
-    qual_no_delinquency: formData['자격_체납없음'] === '충족',
+    qual_no_overdue:     true,
+    qual_no_delinquency: true,
     q1_background:       formData['Q1_신청배경'],
     q2_repay_plan:       formData['Q2_사용상환계획'],
     form_data:           formData,
   });
 
   if (error) {
-    alert('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.\n' + error.message);
+    alert('제출 중 오류가 발생했습니다.\n' + error.message);
     if (btn) { btn.disabled = false; btn.textContent = '✉️ 신청서 최종 제출'; }
     return;
   }
@@ -1457,6 +1410,7 @@ async function submitApp() {
   if (display) display.textContent = receipt;
   goStep(3);
 }
+
 </script>
 </body>
 </html>
