@@ -1861,13 +1861,34 @@ function getRawFiles() {
 async function uploadFilesToSupabase(client, receiptNumber, rawFiles) {
   const rejectionPaths = [];
   const debtAdjPaths = [];
+  const safeReceipt = String(receiptNumber).replace(/[^A-Za-z0-9_.-]/g, '_');
   let stamp = Date.now();
 
-  async function uploadOne(file) {
-    const base = (file.name || 'file').replace(/[/\\]/g, '_').replace(/\.[^.]+$/, '') || 'file';
-    const extMatch = (file.name || '').match(/\.([^.]+)$/);
-    const ext = extMatch ? extMatch[1] : 'bin';
-    const path = `${receiptNumber}/${base}_${stamp++}.${ext}`;
+  function extFromMime(file) {
+    const t = (file.type || '').toLowerCase();
+    const map = {
+      'application/pdf': 'pdf',
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/gif': 'gif',
+      'image/webp': 'webp',
+      'image/heic': 'heic',
+      'image/heif': 'heif',
+      'application/msword': 'doc',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+      'application/zip': 'zip'
+    };
+    return map[t] || 'bin';
+  }
+
+  async function uploadOne(file, kind) {
+    const ext = extFromMime(file);
+    const name =
+      kind === 'rejection'
+        ? `${safeReceipt}_rejection_${stamp++}.${ext}`
+        : `${safeReceipt}_debtadj_${stamp++}.${ext}`;
+    const path = `${safeReceipt}/${name}`;
     const { data, error } = await client.storage
       .from('dasibom-files')
       .upload(path, file, { upsert: true });
@@ -1876,10 +1897,10 @@ async function uploadFilesToSupabase(client, receiptNumber, rawFiles) {
   }
 
   for (const file of rawFiles.rejectionFiles) {
-    rejectionPaths.push(await uploadOne(file));
+    rejectionPaths.push(await uploadOne(file, 'rejection'));
   }
   for (const file of rawFiles.debtAdjFiles) {
-    debtAdjPaths.push(await uploadOne(file));
+    debtAdjPaths.push(await uploadOne(file, 'debtadj'));
   }
   return { rejection: rejectionPaths, debtAdj: debtAdjPaths };
 }
