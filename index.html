@@ -1851,19 +1851,35 @@ async function sendToGAS(payload) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+    return null;
   } catch(e) {
     console.warn('GAS 전송 실패 (Supabase 저장은 정상):', e.message);
+    return null;
   }
 }
 
-function collectFiles() {
-  const rejectionFiles = Array.from(
-    document.querySelectorAll('#eq4-attach input[type="file"]')[0]?.files || []
-  );
-  const debtAdjFiles = Array.from(
-    document.querySelector('#dadj-ing input[type="file"]')?.files || []
-  );
-  return { rejectionFiles, debtAdjFiles };
+async function collectFilesAsBase64() {
+  const result = [];
+
+  const rejectionInput = document.querySelectorAll('#eq4-attach input[type="file"]')[0];
+  const debtAdjInput   = document.querySelector('#dadj-ing input[type="file"]');
+
+  async function encodeFiles(input, fileType) {
+    if (!input || !input.files.length) return;
+    for (const file of Array.from(input.files)) {
+      const data = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload  = () => res(reader.result.split(',')[1]);
+        reader.onerror = () => rej(new Error('파일 읽기 실패'));
+        reader.readAsDataURL(file);
+      });
+      result.push({ name: file.name, mimeType: file.type, data, fileType });
+    }
+  }
+
+  await encodeFiles(rejectionInput, 'rejection');
+  await encodeFiles(debtAdjInput,   'debtAdj');
+  return result;
 }
 
 async function uploadFiles(client, receiptNumber, files) {
@@ -1895,7 +1911,7 @@ async function uploadFiles(client, receiptNumber, files) {
 }
 
 async function submitToSupabase() {
-  const SUPABASE_URL = 'https://xzuohrgebuudkfjxfghh.supabase.co';
+  const SUPABASE_URL  = 'https://xzuohrgebuudkfjxfghh.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6dW9ocmdlYnV1ZGtmanhmZ2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTEzOTksImV4cCI6MjA5MTQ4NzM5OX0.2hkGJ2IbafzVIiOKtHVbhET7fd-1dHj8ACMX7JMsQpM';
   const submitBtn = document.querySelector('button[onclick="submitApp()"]');
   const originalText = submitBtn ? submitBtn.textContent : '';
@@ -1914,37 +1930,24 @@ async function submitToSupabase() {
         detectSessionInUrl: false
       }
     });
-    // insert
+
+    // 1. Supabase INSERT
     const { data: insertData, error: insertError } = await client
       .from('dasibom_applications')
       .insert(payload)
       .select('receipt_number, id')
       .single();
     if (insertError) throw insertError;
+
     payload.receipt_number = insertData.receipt_number;
 
-    // 파일 업로드
-    const files = collectFiles();
-    console.log('files.rejectionFiles:', files.rejectionFiles);
-    console.log('files.debtAdjFiles:', files.debtAdjFiles);
-    console.log('hasFiles:', files.rejectionFiles.length > 0 || files.debtAdjFiles.length > 0);
-    const hasFiles = files.rejectionFiles.length > 0 || files.debtAdjFiles.length > 0;
-    let fileResults = { rejection: [], debtAdj: [] };
-    if (hasFiles) {
-      fileResults = await uploadFiles(client, insertData.receipt_number, files);
-    }
+    // 2. 파일 base64 인코딩
+    const files = await collectFilesAsBase64();
 
-    // 파일 경로 업데이트
-    if (hasFiles) {
-      await client
-        .from('dasibom_applications')
-        .update({
-          file_rejection_proof: fileResults.rejection.length ? fileResults.rejection : null,
-          file_debt_adjustment: fileResults.debtAdj.length ? fileResults.debtAdj : null
-        })
-        .eq('id', insertData.id);
-    }
+    // 3. GAS 전송 (Sheets 저장 + Drive 파일 업로드)
+    await sendToGAS({ ...payload, files });
 
+    // 4. 완료 화면
     document.getElementById('receipt-display').textContent = payload.receipt_number;
     const nowReceipt = new Date();
     const dateStr = nowReceipt.getFullYear() + '.' +
@@ -1954,18 +1957,19 @@ async function submitToSupabase() {
       String(nowReceipt.getMinutes()).padStart(2,'0');
     const purposeMap = { refinance: '고금리 대환대출', living: '생활비 대출' };
 
-    const nameEl = document.getElementById('receipt-name');
-    const dateEl = document.getElementById('receipt-date');
+    const nameEl    = document.getElementById('receipt-name');
+    const dateEl    = document.getElementById('receipt-date');
     const purposeEl = document.getElementById('receipt-purpose');
-    const amountEl = document.getElementById('receipt-amount');
+    const amountEl  = document.getElementById('receipt-amount');
 
-    if (nameEl) nameEl.textContent = payload.name || '—';
-    if (dateEl) dateEl.textContent = dateStr;
+    if (nameEl)    nameEl.textContent    = payload.name || '—';
+    if (dateEl)    dateEl.textContent    = dateStr;
     if (purposeEl) purposeEl.textContent = purposeMap[payload.loan_purpose] || payload.loan_purpose || '—';
-    if (amountEl) amountEl.textContent = payload.loan_amount ? payload.loan_amount + ' 만원' : '—';
-    await sendToGAS({ ...payload, receipt_number: insertData.receipt_number });
+    if (amountEl)  amountEl.textContent  = payload.loan_amount ? payload.loan_amount + ' 만원' : '—';
+
     clearDraft();
     goStep(3);
+
   } catch (error) {
     alert('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.\n\n오류: ' + error.message);
     if (submitBtn) {
