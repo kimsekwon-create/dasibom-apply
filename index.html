@@ -863,7 +863,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
       <div class="form-row">
         <label class="form-label">예상치 못한 상황(갑작스러운 의료비, 실직 등)이 생겼을 때 어떻게 대처하실 것 같으신가요?</label>
         <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">보유 현금, 도움받을 수 있는 주변 상황, 처분 가능한 자산 등 현실적으로 생각나는 것들을 편하게 적어주세요.</p>
-        <textarea class="form-textarea" style="min-height:90px" placeholder="예) 부모님께 일시적으로 도움을 받을 수 있고, 적금이 만기되는 게 있어서 급한 상황은 어느 정도 버틸 수 있을 것 같습니다."></textarea>
+        <textarea class="form-textarea" id="ta-crisis-buffer" style="min-height:90px" placeholder="예) 부모님께 일시적으로 도움을 받을 수 있고, 적금이 만기되는 게 있어서 급한 상황은 어느 정도 버틸 수 있을 것 같습니다."></textarea>
       </div>
     </div>
   </div>
@@ -1650,6 +1650,34 @@ function getTextareaValue(el) {
   return el.value;
 }
 
+// ── 기관유형 한글 정규화 ──
+function mapLenderType(raw) {
+  if (!raw) return '';
+  if (raw.includes('저축은행'))                    return '저축은행';
+  if (raw.includes('카드'))                         return '카드론';
+  if (raw.includes('캐피탈'))                       return '캐피탈';
+  if (raw.includes('보험'))                         return '보험사';
+  if (raw.includes('대부'))                         return '대부업';
+  if (raw.includes('가족') || raw.includes('지인')) return '가족및지인';
+  if (raw.includes('은행'))                         return '은행';
+  if (raw.includes('정책'))                         return '정책서민금융';
+  if (raw.includes('학자금'))                       return '학자금';
+  if (raw.includes('서민금융'))                     return '서민금융';
+  if (raw.includes('신용회복'))                     return '신용회복';
+  return raw;
+}
+
+// ── 금리 범위 → 숫자 변환 ──
+function rateBandToNum(band) {
+  if (!band) return 0;
+  if (band.includes('미만'))   return 3;
+  if (band.includes('5~10'))  return 7;
+  if (band.includes('10~15')) return 12;
+  if (band.includes('15~20')) return 17;
+  if (band.includes('20'))    return 22;
+  return 0;
+}
+
 function collectPayload() {
   function getIntValue(selector) {
     const el = document.querySelector(selector);
@@ -1657,12 +1685,15 @@ function collectPayload() {
     const v = (el.value || '').trim();
     return v ? parseInt(v, 10) : null;
   }
+
   const page2 = document.getElementById('page2');
   const textareas = page2 ? page2.querySelectorAll('textarea') : [];
+
   const incomeTypeGroup = document.querySelectorAll('#page2 .check-group')[0];
   const incomeType = incomeTypeGroup
     ? Array.from(incomeTypeGroup.querySelectorAll('.check-btn.selected')).map(btn => btn.textContent.trim()).join(',')
     : '';
+
   let loanPurpose = '';
   document.querySelectorAll('input[name="elig-purpose"]').forEach(inp => {
     if (inp.closest('.radio-btn')?.classList.contains('selected')) loanPurpose = inp.value;
@@ -1672,46 +1703,143 @@ function collectPayload() {
     if (checked) loanPurpose = checked.value;
   }
 
-  const base = {
-    name: document.querySelector('#page2 input[type="text"][placeholder*="실명"]')?.value || '',
-    ssn_front: document.querySelector('#page2 input[placeholder*="앞 6자리"]')?.value || '',
-    phone: document.querySelector('#page2 input[type="tel"]')?.value || '',
-    email: document.querySelector('#page2 input[type="email"]')?.value || '',
-    addr_road: document.getElementById('addr-road')?.value || '',
-    addr_detail: document.getElementById('addr-detail')?.value || '',
-    residence_type: getRadioValue('res'),
-    household_size: getRadioValue('hh'),
-    loan_purpose: loanPurpose,
-    loan_amount: getIntValue('#loan-amount'),
-    income_type: incomeType,
-    income_work: getIntValue('#inc-work'),
-    income_biz: getIntValue('#inc-biz'),
-    income_gov: getIntValue('#inc-gov'),
-    income_other: getIntValue('#inc-etc'),
-    debt_rows: collectDebtRows(),
-    debt_adjustment: getRadioValue('debt-adj'),
-    exp_rent: getIntValue('#exp-rent'),
-    exp_food: getIntValue('#exp-food'),
-    exp_transit: getIntValue('#exp-transit'),
-    exp_comm: getIntValue('#exp-comm'),
-    exp_medical: getIntValue('#exp-medical'),
-    exp_insure: getIntValue('#exp-insure'),
-    exp_loan: getIntValue('#exp-loan'),
-    exp_saving: getIntValue('#exp-saving'),
-    exp_etc: getIntValue('#exp-etc'),
-    qual_age: true,
-    qual_income: true,
-    qual_low_credit: true,
-    qual_no_overdue: true,
-    qual_no_delinquency: true,
-    q1_background: getTextareaValue(document.getElementById('ta-bg-reason')),
-    q1_future: getTextareaValue(textareas[1]),
-    q2_repay_plan: getTextareaValue(document.getElementById('ta-loan-plan')),
-    util_late: getRadioValue('util-late'),
-    frdi_scores: collectFrdiScores()
+  const incSustainRaw = getRadioValue('inc-sustain');
+  let 직장유지가능성 = '';
+  if (incSustainRaw.includes('유지'))                                        직장유지가능성 = '유지예정';
+  else if (incSustainRaw.includes('불확실'))                                 직장유지가능성 = '불확실';
+  else if (incSustainRaw.includes('이직') || incSustainRaw.includes('전환')) 직장유지가능성 = '이직·전환';
+
+  const incChangeRaw = getRadioValue('inc-change');
+  let 소득전망 = '';
+  if (incChangeRaw.includes('증가'))      소득전망 = incChangeRaw;
+  else if (incChangeRaw.includes('감소')) 소득전망 = incChangeRaw;
+  else if (직장유지가능성 === '유지예정') 소득전망 = '유지';
+
+  const debtAdjRaw = getRadioValue('debt-adj');
+  let 채무조정이력 = '없음';
+  if (debtAdjRaw.includes('진행'))        채무조정이력 = '현재진행중';
+  else if (debtAdjRaw.includes('과거'))   채무조정이력 = '과거완료';
+
+  const debtDeferRaw = getRadioValue('adj-defer');
+  let 상환유예이력 = '없음';
+  if (debtDeferRaw.includes('1회') && !debtDeferRaw.includes('2회')) 상환유예이력 = '1회';
+  else if (debtDeferRaw.includes('2회')) 상환유예이력 = '2회이상';
+
+  const utilLateRaw = getRadioValue('util-late');
+  let 연체여부 = '없음';
+  if (utilLateRaw.includes('1~2회'))  연체여부 = '1~2회';
+  else if (utilLateRaw.includes('3회')) 연체여부 = '3회이상';
+
+  const hhRaw = getRadioValue('hh');
+  const 가구원수 = parseInt(hhRaw) || 1;
+
+  const 자동이체동의 = document.getElementById('autodebit-agree')?.checked ? '동의' : '';
+
+  const debtRows = collectDebtRows();
+  const 부채명세배열 = debtRows.map(row => ({
+    기관명:   row.org_name || '',
+    기관유형: mapLenderType(row.lender_type),
+    종류:     row.product_type || '',
+    원금:     row.contract_amt || 0,
+    잔액:     row.balance_amt  || 0,
+    금리:     rateBandToNum(row.rate_band),
+    월상환:   row.monthly_pay  || 0
+  }));
+
+  const incWork  = getIntValue('#inc-work')  || 0;
+  const incBiz   = getIntValue('#inc-biz')   || 0;
+  const incGov   = getIntValue('#inc-gov')   || 0;
+  const incOther = getIntValue('#inc-etc')   || 0;
+
+  const expRent    = getIntValue('#exp-rent')    || 0;
+  const expFood    = getIntValue('#exp-food')    || 0;
+  const expTransit = getIntValue('#exp-transit') || 0;
+  const expComm    = getIntValue('#exp-comm')    || 0;
+  const expMedical = getIntValue('#exp-medical') || 0;
+  const expInsure  = getIntValue('#exp-insure')  || 0;
+  const expLoan    = getIntValue('#exp-loan')    || 0;
+  const expSaving  = getIntValue('#exp-saving')  || 0;
+  const expEtc     = getIntValue('#exp-etc')     || 0;
+
+  const q3El = document.getElementById('ta-crisis-buffer') || textareas[3];
+  const q3CrisisBuffer = getTextareaValue(q3El);
+  const q4FutureHope   = getTextareaValue(textareas[1]);
+
+  const formDataKorean = {
+    소득유형:      incomeType,
+    직장유지가능성,
+    소득전망,
+    소득_근로:      incWork,
+    소득_사업:      incBiz,
+    소득_정부지원:  incGov,
+    소득_가족기타:  incOther,
+    지출_주거:      expRent,
+    지출_식비:      expFood,
+    지출_교통:      expTransit,
+    지출_통신:      expComm,
+    지출_의료:      expMedical,
+    지출_보험:      expInsure,
+    지출_부채상환:  expLoan,
+    지출_저축:      expSaving,
+    지출_기타:      expEtc,
+    부채_명세:      JSON.stringify(부채명세배열),
+    채무조정이력,
+    상환유예이력,
+    연체여부,
+    가구원수,
+    자동이체동의,
+    Q1_신청배경:     getTextareaValue(document.getElementById('ta-bg-reason')),
+    Q2_사용상환계획: getTextareaValue(document.getElementById('ta-loan-plan')),
+    Q3_위기대응:     q3CrisisBuffer,
+    Q4_앞으로의희망: q4FutureHope,
+    자격_연령:     '충족',
+    자격_저신용:   '충족',
+    자격_연체없음: '충족',
+    자격_체납없음: '충족'
   };
 
-  return { ...base, form_data: { ...base } };
+  const base = {
+    name:           document.querySelector('#page2 input[type="text"][placeholder*="실명"]')?.value || '',
+    ssn_front:      document.querySelector('#page2 input[placeholder*="앞 6자리"]')?.value || '',
+    phone:          document.querySelector('#page2 input[type="tel"]')?.value || '',
+    email:          document.querySelector('#page2 input[type="email"]')?.value || '',
+    addr_road:      document.getElementById('addr-road')?.value || '',
+    addr_detail:    document.getElementById('addr-detail')?.value || '',
+    residence_type: getRadioValue('res'),
+    household_size: hhRaw,
+    loan_purpose:   loanPurpose,
+    loan_amount:    getIntValue('#loan-amount'),
+    income_type:    incomeType,
+    income_work:    incWork  || null,
+    income_biz:     incBiz   || null,
+    income_gov:     incGov   || null,
+    income_other:   incOther || null,
+    debt_rows:      debtRows,
+    debt_adjustment: 채무조정이력,
+    exp_rent:       expRent    || null,
+    exp_food:       expFood    || null,
+    exp_transit:    expTransit || null,
+    exp_comm:       expComm    || null,
+    exp_medical:    expMedical || null,
+    exp_insure:     expInsure  || null,
+    exp_loan:       expLoan    || null,
+    exp_saving:     expSaving  || null,
+    exp_etc:        expEtc     || null,
+    qual_age:             true,
+    qual_income:          true,
+    qual_low_credit:      true,
+    qual_no_overdue:      true,
+    qual_no_delinquency:  true,
+    q1_background:    getTextareaValue(document.getElementById('ta-bg-reason')),
+    q1_future:        q4FutureHope,
+    q2_repay_plan:    getTextareaValue(document.getElementById('ta-loan-plan')),
+    q3_crisis_buffer: q3CrisisBuffer,
+    q4_future_hope:   q4FutureHope,
+    util_late:    utilLateRaw,
+    frdi_scores:  collectFrdiScores()
+  };
+
+  return { ...base, form_data: { ...base, ...formDataKorean } };
 }
 
 function collectFiles() {
