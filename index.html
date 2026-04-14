@@ -1905,16 +1905,6 @@ async function uploadFilesToSupabase(client, receiptNumber, rawFiles) {
   return { rejection: rejectionPaths, debtAdj: debtAdjPaths };
 }
 
-async function sendToGAS(payload) {
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbyBkr_F7fFQx8gscPM27zvQOo9E9ox35d0roCRaID1_8ddKoGHpe5LWm3IemvJLmGDlHw/exec';
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (!res.ok) throw new Error('GAS 전송 실패 (' + res.status + ')');
-}
-
 async function submitToSupabase() {
   const SUPABASE_URL  = 'https://xzuohrgebuudkfjxfghh.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6dW9ocmdlYnV1ZGtmanhmZ2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTEzOTksImV4cCI6MjA5MTQ4NzM5OX0.2hkGJ2IbafzVIiOKtHVbhET7fd-1dHj8ACMX7JMsQpM';
@@ -1958,15 +1948,6 @@ async function submitToSupabase() {
         .eq('id', insertData.id);
       if (updateError) throw updateError;
     }
-
-    const file_path_rejection = pathLists.rejection.join(',');
-    const file_path_debtAdj = pathLists.debtAdj.join(',');
-
-    await sendToGAS({
-      ...payload,
-      file_path_rejection,
-      file_path_debtAdj
-    });
 
     // 완료 화면
     document.getElementById('receipt-display').textContent = payload.receipt_number;
