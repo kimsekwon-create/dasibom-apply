@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>프로젝트 다시, 봄 — 청년 대출 신청</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --primary: #1E1E1E;
+  --primary-light: #333333;
+  --primary-pale: #F7F7F0;
+  --accent: #FFE300;
+  --accent-light: #FFF9CC;
+  --kakao: #FFE300;
+  --success: #2E7D4F;
+  --success-light: #E8F5EE;
+  --warning: #B8860B;
+  --warning-light: #FFF8DC;
+  --danger: #B83232;
+  --gray-50: #FAFAFA; --gray-100: #F5F5F5; --gray-200: #E8E8E8;
+  --gray-300: #CCCCCC; --gray-400: #A3A3A3; --gray-500: #666666;
+  --gray-700: #333333; --gray-900: #1E1E1E;
+  --text: #1E1E1E; --text-muted: #666666; --border: #E0E0E0;
+  --radius: 10px; --radius-sm: 6px;
+  --shadow-sm: 0 1px 4px rgba(0,0,0,.06);
+  --shadow: 0 4px 16px rgba(0,0,0,.08);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+/* ── 헤더 ── */
+.site-header { background: #fff; border-bottom: 1px solid var(--border); padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm); }
+.header-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-mark { width: 34px; height: 34px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #fff; font-weight: 700; }
+.logo-text { font-size: 15px; font-weight: 700; color: var(--primary); }
+.logo-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: -2px; }
+.header-badges { display: flex; gap: 6px; }
+.header-badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+.badge-kakao { background: var(--kakao); color: #3C1E1E; border: 1px solid #E6CF00; }
+.badge-sinbok { background: #E8F0FE; color: #1A5276; border: 1px solid #90B4E0; }
+
+/* ── 진행바 ── */
+.progress-wrap { background: #fff; border-bottom: 1px solid var(--border); padding: 0 24px; }
+.progress-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: stretch; padding: 16px 0; }
+.step-item { display: flex; align-items: center; gap: 10px; flex: 1; padding: 10px 14px; border-radius: var(--radius); cursor: default; transition: background .2s; }
+.step-item.active { background: var(--primary-pale); }
+.step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; background: var(--gray-200); color: var(--gray-500); transition: all .3s; }
+.step-item.active .step-num { background: var(--primary); color: #fff; }
+.step-item.done .step-num { background: var(--success); color: #fff; }
+.step-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.step-item.active .step-label { color: var(--primary); font-weight: 600; }
+.step-item.done .step-label { color: var(--success); }
+.step-arrow { color: var(--gray-300); font-size: 16px; margin: 0 4px; align-self: center; }
+
+/* ── 공용 ── */
+.main { max-width: 900px; margin: 0 auto; padding: 32px 24px 120px; }
+.page { display: none; } .page.active { display: block; animation: fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.card { background: #fff; border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+.card-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--gray-100); }
+.card-title { font-size: 16px; font-weight: 700; color: var(--gray-900); display: flex; align-items: center; gap: 8px; }
+.card-title .icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.card-desc { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+.card-body { padding: 20px 24px; }
+
+.cat-header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); padding: 16px 24px; display: flex; align-items: center; gap: 14px; }
+.cat-num { font-size: 18px; font-weight: 800; color: rgba(255,255,255,.3); font-family: 'Noto Serif KR', serif; }
+.cat-title-text { color: #fff; font-size: 16px; font-weight: 700; }
+
+.notice-box { background: var(--warning-light); border: 1px solid #E8D28A; border-radius: var(--radius); padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: var(--warning); display: flex; gap: 10px; align-items: flex-start; }
+.notice-box strong { font-weight: 600; }
+.info-box { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--text-muted); display: flex; gap: 8px; align-items: flex-start; }
+.info-box .icon { font-size: 14px; flex-shrink: 0; }
+
+.section-title { font-size: 14px; font-weight: 700; color: var(--primary); margin: 24px 0 14px; padding-left: 12px; border-left: 3px solid var(--primary); }
+.section-title:first-child { margin-top: 0; }
+
+/* ── 폼 ── */
+.form-row { margin-bottom: 18px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 7px; }
+.form-label .req { color: var(--accent); margin-left: 2px; }
+.form-label .opt { color: var(--gray-400); font-size: 11px; font-weight: 400; margin-left: 4px; }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; color: var(--text); background: #fff; transition: border-color .2s, box-shadow .2s; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,30,84,.1); }
+.form-textarea { min-height: 100px; resize: vertical; line-height: 1.7; }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+
+.radio-group, .check-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.radio-btn, .check-btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; transition: all .2s; background: #fff; user-select: none; }
+.radio-btn:hover, .check-btn:hover { border-color: var(--primary-light); background: var(--primary-pale); }
+.radio-btn.selected, .check-btn.selected { border-color: var(--primary); background: var(--primary-pale); color: var(--primary); font-weight: 600; }
+.radio-dot, .check-mark { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--gray-300); flex-shrink: 0; transition: all .2s; }
+.check-mark { border-radius: 4px; }
+.radio-btn.selected .radio-dot { border-color: var(--primary); background: var(--primary); box-shadow: inset 0 0 0 3px #fff; }
+.check-btn.selected .check-mark { border-color: var(--primary); background: var(--primary); }
+.radio-btn input[type="radio"] { display: none; }
+
+.conditional { display: none; margin-top: 12px; padding: 14px 16px; background: var(--gray-50); border-radius: var(--radius-sm); border: 1px solid var(--gray-200); }
+.conditional.show { display: block; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: 13px 28px; border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; transition: all .2s; }
+.btn-primary { background: var(--primary); color: #fff; width: 100%; }
+.btn-primary:hover { background: var(--primary-light); box-shadow: 0 4px 12px rgba(59,30,84,.25); }
+.btn-back { background: none; border: 1.5px solid var(--gray-300); color: var(--gray-500); padding: 10px 20px; border-radius: var(--radius); font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; }
+.btn-group { display: flex; gap: 12px; margin-top: 24px; }
+.btn-send { background: var(--primary-pale); color: var(--primary); border: 1px solid var(--primary); padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit; }
+.input-with-btn { display: flex; gap: 10px; align-items: flex-start; }
+.input-with-btn .form-input { flex: 1; }
+.timer { font-size: 12px; color: var(--accent); margin-top: 6px; font-weight: 600; }
+
+/* ── 자가진단 ── */
+.elig-hero { background: linear-gradient(135deg, #1E1E1E 0%, #333333 100%); border-radius: 14px; padding: 36px 32px; margin-bottom: 24px; color: #fff; position: relative; overflow: hidden; }
+.elig-hero::before { content: ''; position: absolute; right: -30px; top: -30px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,227,0,.08); }
+.elig-hero h1 { font-family: 'Noto Serif KR', serif; font-size: 26px; font-weight: 700; margin-bottom: 8px; position: relative; z-index: 1; color: #FFE300; }
+.elig-hero p { font-size: 14px; opacity: .85; line-height: 1.7; position: relative; z-index: 1; max-width: 520px; }
+.hero-partners { display: flex; gap: 8px; margin-top: 16px; position: relative; z-index: 1; }
+.hero-partner { font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,.15); color: #fff; }
+
+.elig-q { padding: 18px 0; border-bottom: 1px solid var(--gray-100); }
+.elig-q:last-of-type { border-bottom: none; }
+.elig-q-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; background: var(--primary-pale); color: var(--primary); font-size: 12px; font-weight: 700; margin-right: 8px; }
+.elig-q-label { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; }
+.stop-msg { background: #FFF0F0; border: 1.5px solid #FFCDD2; border-radius: 10px; padding: 20px; margin-top: 16px; text-align: center; animation: fadeIn .3s ease; }
+.stop-msg .stop-icon { font-size: 28px; margin-bottom: 8px; }
+.stop-msg h3 { font-size: 15px; font-weight: 700; color: #C62828; margin-bottom: 6px; }
+.stop-msg p { font-size: 13px; color: #B71C1C; line-height: 1.6; }
+.pass-msg { background: var(--success-light); border: 1.5px solid #A8D5B8; border-radius: 10px; padding: 20px; margin-top: 16px; text-align: center; animation: fadeIn .3s ease; }
+.pass-msg h3 { font-size: 15px; font-weight: 700; color: var(--success); margin-bottom: 6px; }
+.pass-msg p { font-size: 13px; color: #1B5E20; }
+.sub-question { background: var(--primary-pale); border: 1px solid #E0E0E0; border-radius: 8px; padding: 14px 16px; margin-top: 10px; animation: fadeIn .3s ease; }
+.elig-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0; border-radius: 8px; overflow: hidden; }
+.elig-table th, .elig-table td { padding: 7px 8px; text-align: center; border: 1px solid var(--border); }
+.elig-table th { background: #FFF8DC; font-weight: 600; color: #8B6914; }
+.elig-table td { background: #fff; }
+
+/* ── KCB ── */
+.kcb-auto { background: #F0F4F8; border: 1px solid #D0DAE4; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--gray-500); display: flex; align-items: center; gap: 8px; }
+.kcb-badge { background: #607D8B; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+.kcb-auto-item { display: flex; align-items: center; gap: 10px; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 10px 14px; }
+.kcb-label { font-size: 12px; font-weight: 600; color: var(--gray-500); min-width: 140px; }
+.score-display { display: flex; align-items: center; gap: 20px; background: linear-gradient(135deg, #FAFAF5, #F5F5F0); border: 1px solid #E0E0E0; border-radius: var(--radius); padding: 20px; margin: 16px 0; }
+.score-circle { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-light)); display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+.score-num { font-size: 22px; font-weight: 800; color: #fff; }
+.score-label { font-size: 10px; color: rgba(255,255,255,.7); }
+
+/* ── 명세 ── */
+.mesei-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mesei-table th { background: var(--gray-50); font-weight: 600; color: var(--gray-500); padding: 8px 6px; border-bottom: 2px solid var(--gray-200); text-align: left; font-size: 11px; }
+.mesei-table td { padding: 6px 4px; border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+.mesei-table input, .mesei-table select { font-size: 12px; padding: 6px 8px; }
+.mesei-add { margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--primary); cursor: pointer; background: none; border: 1.5px dashed var(--primary-light); border-radius: var(--radius-sm); padding: 8px 16px; width: 100%; transition: all .2s; font-family: inherit; }
+.mesei-add:hover { background: var(--primary-pale); }
+
+/* ── 진행바, 리커트, 계산 등 ── */
+.survey-progress { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 20px; margin-bottom: 20px; box-shadow: var(--shadow-sm); }
+.survey-progress-inner { display: flex; align-items: center; gap: 14px; }
+.survey-progress-label { font-size: 12px; font-weight: 600; color: var(--gray-500); white-space: nowrap; }
+.survey-progress-track { flex: 1; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+.survey-progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 3px; transition: width .3s; }
+.survey-progress-pct { font-size: 12px; font-weight: 700; color: var(--primary); min-width: 36px; text-align: right; }
+
+.buffer-grid { display: flex; flex-direction: column; gap: 10px; }
+.buffer-item { display: flex; align-items: center; gap: 12px; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 12px 14px; }
+.buffer-icon { font-size: 20px; flex-shrink: 0; }
+.buffer-label { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+
+.likert-q { margin-bottom: 16px; padding: 12px 16px; background: var(--gray-50); border-radius: var(--radius-sm); border: 1px solid var(--gray-200); }
+.likert-text { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 10px; }
+.likert-scale { display: flex; align-items: center; gap: 8px; justify-content: center; }
+.likert-label { font-size: 10px; color: var(--text-muted); max-width: 50px; text-align: center; white-space: pre-line; }
+.likert-options { display: flex; gap: 6px; }
+.likert-opt { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--gray-300); background: #fff; font-size: 13px; font-weight: 600; color: var(--gray-500); cursor: pointer; transition: all .2s; font-family: inherit; }
+.likert-opt:hover { border-color: var(--primary); color: var(--primary); }
+.likert-opt.selected { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+.calc-box { background: linear-gradient(135deg, #1E1E1E, #333333); border-radius: var(--radius); padding: 20px; color: #fff; margin-top: 16px; }
+.calc-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.5); margin-bottom: 12px; letter-spacing: .05em; }
+.calc-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; color: rgba(255,255,255,.7); }
+.calc-row.calc-total { border-top: 1px solid rgba(255,255,255,.15); margin-top: 8px; padding-top: 12px; font-weight: 700; color: #fff; }
+
+.complete-screen { text-align: center; padding: 48px 24px; }
+.complete-icon { font-size: 48px; margin-bottom: 16px; }
+.complete-screen h2 { font-family: 'Noto Serif KR', serif; font-size: 22px; margin-bottom: 12px; color: var(--primary); }
+.complete-screen p { font-size: 14px; color: var(--text-muted); line-height: 1.8; }
+
+.carrier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+.carrier-btn { border: 2px solid var(--border); border-radius: var(--radius); padding: 16px 12px; cursor: pointer; text-align: center; background: #fff; transition: all .2s; font-size: 14px; font-weight: 600; color: var(--gray-700); font-family: inherit; }
+.carrier-btn:hover, .carrier-btn.selected { border-color: var(--primary); background: var(--primary-pale); color: var(--primary); }
+.carrier-logo { font-size: 22px; margin-bottom: 4px; }
+
+@media (max-width: 640px) {
+  .carrier-grid { grid-template-columns: repeat(2, 1fr); }
+  .form-row-2 { grid-template-columns: 1fr; }
+  .header-badges { display: none; }
+  .elig-hero { padding: 24px 18px; }
+  .elig-hero h1 { font-size: 20px; }
+  .elig-hero p { font-size: 13px; }
+  .hero-partners { flex-wrap: wrap; }
+  .step-label { font-size: 11px; }
+  .step-item { padding: 8px 6px; gap: 6px; }
+  .step-num { width: 24px; height: 24px; font-size: 11px; }
+  .step-arrow { margin: 0 2px; font-size: 14px; }
+  .progress-inner { padding: 12px 0; }
+  .main { padding: 20px 14px 60px; }
+  .card-header { padding: 16px 16px 12px; }
+  .card-body { padding: 16px; }
+  .score-display { flex-direction: column; text-align: center; }
+
+  /* 자격확인 Q 카드 — 질문+라디오 세로 배치 */
+  #page0 .radio-group { width: 100%; justify-content: flex-start; }
+
+  /* 중위소득 테이블 모바일 — 가로 스크롤 허용 */
+  .elig-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; padding: 0 4px; }
+  .elig-table { font-size: 11px; min-width: 520px; }
+  .elig-table th, .elig-table td { padding: 6px 5px; font-size: 11px; white-space: nowrap; }
+
+  /* 소득/지출 입력행 — 라벨 폭 축소 */
+  .income-row-label { width: 110px !important; font-size: 12px !important; }
+
+  /* 부채 테이블 */
+  .mesei-table th, .mesei-table td { font-size: 11px; padding: 5px 3px; }
+
+  /* 라디오/체크 터치영역 확보 */
+  .radio-btn, .check-btn { padding: 10px 12px; font-size: 13px; min-height: 42px; }
+
+  /* 대출 용도 선택 카드 */
+  .radio-btn div span { font-size: 11px !important; }
+
+  /* 리커트 */
+  .likert-scale { gap: 4px; }
+  .likert-opt { width: 32px; height: 32px; font-size: 12px; }
+  .likert-label { font-size: 9px; max-width: 40px; }
+  .likert-text { font-size: 12px; }
+
+  /* 계산박스 */
+  .calc-box { padding: 16px; }
+  .calc-row { font-size: 13px; }
+
+  /* 버튼 */
+  .btn { padding: 12px 20px; font-size: 14px; }
+  .btn-group { flex-direction: column; gap: 10px; }
+  .btn-back { width: 100%; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">봄</div>
+      <div><div class="logo-text">프로젝트 다시, 봄</div><div class="logo-sub">청년 대출 지원 사업</div></div>
+    </div>
+    <div class="header-badges">
+      <span class="header-badge badge-kakao">카카오뱅크</span>
+      <span class="header-badge badge-sinbok">신용회복위원회</span>
+    </div>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <div class="step-item active" id="step0-indicator"><div class="step-num">1</div><div><div class="step-label">자격확인</div></div></div>
+    <span class="step-arrow">›</span>
+    <div class="step-item" id="step1-indicator"><div class="step-num">2</div><div><div class="step-label">기본정보</div></div></div>
+    <span class="step-arrow">›</span>
+    <div class="step-item" id="step2-indicator"><div class="step-num">3</div><div><div class="step-label">신청서</div></div></div>
+  </div>
+</div>
+
+<main class="main">
+
+<!-- ═══ STEP 0 — 자격확인 ═══ -->
+<div class="page active" id="page0">
+  <div class="elig-hero">
+    <h1>프로젝트 다시, 봄</h1>
+    <p>「프로젝트 다시, 봄」은 제도권 금융 서비스에서 소외된 청년들이 다시 제도권 금융 안으로 들어올 수 있도록 지원하는 사업입니다. 고금리의 대출 부담을 완화하고, 일시적인 위기를 넘어 안정적인 금융생활로 이어질 수 있도록 돕습니다.</p>
+    <div class="hero-partners">
+      <span class="hero-partner">사회연대은행</span>
+      <span class="hero-partner">카카오뱅크</span>
+      <span class="hero-partner">신용회복위원회</span>
+    </div>
+  </div>
+
+  <div class="notice-box">
+    <span>ℹ️</span>
+    <div><strong>자격확인 안내</strong>: 아래 항목 모두 충족해야 신청이 가능합니다. 해당하지 않는 항목이 있으면 안내 메시지가 나타납니다.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><div class="icon" style="background:#FFF8DC;font-size:16px;">✅</div> 자격요건 확인</div>
+      <div class="card-desc">아래 항목을 모두 확인해 주세요</div>
+    </div>
+    <div class="card-body">
+
+      <div style="display:flex;flex-direction:column;gap:14px">
+
+        <!-- Q1 -->
+        <div style="background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:16px 18px;transition:border-color .2s" id="eq1-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
+              <span style="font-size:18px">👤</span>
+              <span style="font-size:14px;font-weight:600;color:var(--text)">만 19세~39세 청년입니다</span>
+            </div>
+            <div class="radio-group" style="gap:6px">
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq1','pass')"><input type="radio" name="eq1"><div class="radio-dot" style="width:14px;height:14px"></div>예</label>
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq1','fail')"><input type="radio" name="eq1"><div class="radio-dot" style="width:14px;height:14px"></div>아니오</label>
+            </div>
+          </div>
+          <div id="eq1-stop" class="stop-msg" style="display:none;margin-top:12px;padding:12px;font-size:12px"><div class="stop-icon" style="font-size:20px">⚠️</div><h3 style="font-size:13px">만 19~39세 청년만 신청 가능합니다</h3></div>
+        </div>
+
+        <!-- Q2 -->
+        <div style="background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:16px 18px" id="eq2-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
+              <span style="font-size:18px">💼</span>
+              <span style="font-size:14px;font-weight:600;color:var(--text)">현재 소득이 있습니다 <span style="font-size:11px;font-weight:400;color:var(--text-muted)">(근로/사업/기타, 프리랜서 포함)</span></span>
+            </div>
+            <div class="radio-group" style="gap:6px">
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq2','pass')"><input type="radio" name="eq2"><div class="radio-dot" style="width:14px;height:14px"></div>예</label>
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq2','fail')"><input type="radio" name="eq2"><div class="radio-dot" style="width:14px;height:14px"></div>아니오</label>
+            </div>
+          </div>
+          <div id="eq2-stop" class="stop-msg" style="display:none;margin-top:12px;padding:12px;font-size:12px"><div class="stop-icon" style="font-size:20px">⚠️</div><h3 style="font-size:13px">소득이 있는 분만 신청 가능합니다</h3></div>
+        </div>
+
+        <!-- Q3 -->
+        <div style="background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:16px 18px" id="eq3-card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <span style="font-size:18px">📊</span>
+            <span style="font-size:14px;font-weight:600;color:var(--text)">가구 월소득이 중위소득 120% 이하입니다</span>
+          </div>
+          <div class="elig-table-wrap">
+          <table class="elig-table" style="margin-bottom:10px">
+            <tr><th>가구원수</th><th>1인</th><th>2인</th><th>3인</th><th>4인</th><th>5인</th><th>6인</th><th>7인+</th></tr>
+            <tr><td>기준(월)</td><td>3,077,086원</td><td>5,039,150원</td><td>6,430,843원</td><td>7,829,462원</td><td>9,068,063원</td><td>10,267,142원</td><td>11,351,574원</td></tr>
+          </table>
+          </div>
+          <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">※ 2026년 기준 중위소득 120%</p>
+          <div class="radio-group" style="gap:6px">
+            <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq3','pass')"><input type="radio" name="eq3"><div class="radio-dot" style="width:14px;height:14px"></div>예, 기준 이하</label>
+            <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq3','fail')"><input type="radio" name="eq3"><div class="radio-dot" style="width:14px;height:14px"></div>아니오, 초과</label>
+          </div>
+          <div id="eq3-stop" class="stop-msg" style="display:none;margin-top:12px;padding:12px;font-size:12px"><div class="stop-icon" style="font-size:20px">⚠️</div><h3 style="font-size:13px">소득 기준을 초과합니다</h3></div>
+        </div>
+
+        <!-- Q4 -->
+        <div style="background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:16px 18px" id="eq4-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
+              <span style="font-size:18px">🚫</span>
+              <span style="font-size:14px;font-weight:600;color:var(--text)">최근 6개월 이내 대출비교서비스에서 부결 경험이 있습니다</span>
+            </div>
+            <div class="radio-group" style="gap:6px">
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq4','pass')"><input type="radio" name="eq4"><div class="radio-dot" style="width:14px;height:14px"></div>예</label>
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq4','fail')"><input type="radio" name="eq4"><div class="radio-dot" style="width:14px;height:14px"></div>아니오</label>
+            </div>
+          </div>
+          <div id="eq4-attach" style="margin-top:12px;background:var(--primary-pale);border:1px solid #E0E0E0;border-radius:var(--radius-sm);padding:14px 16px">
+            <label class="form-label" style="margin-bottom:8px">대출 부결 화면 캡처를 첨부해 주세요.</label>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">대출비교서비스(카카오뱅크, 토스, 핀다 등)에서 받은 부결 문자, 앱 화면 캡처, 이메일 등</p>
+            <label style="display:flex;align-items:center;gap:10px;padding:14px 18px;border:2px dashed #E0E0E0;border-radius:var(--radius-sm);cursor:pointer;background:#fff;transition:all .2s" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='#E0E0E0'">
+              <input type="file" accept="image/*,.pdf" multiple style="display:none" onchange="showFileName(this,'eq4-file-name')">
+              <span style="font-size:20px">📎</span>
+              <div>
+                <span style="font-size:13px;font-weight:600;color:var(--primary)">파일 선택</span>
+                <span style="font-size:12px;color:var(--text-muted);display:block;margin-top:2px">이미지(JPG, PNG) 또는 PDF / 최대 10MB</span>
+              </div>
+            </label>
+            <div id="eq4-file-name" style="margin-top:8px;font-size:13px;color:var(--success);display:none"></div>
+          </div>
+          <div id="eq4-stop" class="stop-msg" style="display:none;margin-top:12px;padding:12px;font-size:12px"><div class="stop-icon" style="font-size:20px">⚠️</div><h3 style="font-size:13px">대출비교서비스 부결 이력이 필요합니다</h3></div>
+        </div>
+
+        <!-- Q5 -->
+        <div style="background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:16px 18px" id="eq5-card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <span style="font-size:18px">⚖️</span>
+            <span style="font-size:14px;font-weight:600;color:var(--text)">개인회생·파산·신용회복 절차 진행 여부</span>
+          </div>
+          <div class="radio-group" style="gap:6px">
+            <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq5','pass');hideSubQ('eq5-sub')"><input type="radio" name="eq5"><div class="radio-dot" style="width:14px;height:14px"></div>해당 없음</label>
+            <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq5','sub');showSubQ('eq5-sub')"><input type="radio" name="eq5"><div class="radio-dot" style="width:14px;height:14px"></div>현재 진행 중</label>
+          </div>
+          <div class="sub-question" id="eq5-sub" style="display:none;margin-top:10px">
+            <p style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px">변제계획 인가 후 <strong>6개월 이상</strong> 성실 변제 중이십니까?</p>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">6개월 이상 성실 변제 중인 경우 신청 가능합니다.</p>
+            <div class="radio-group" style="gap:6px">
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq5sub','pass')"><input type="radio" name="eq5sub"><div class="radio-dot" style="width:14px;height:14px"></div>예</label>
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq5sub','fail')"><input type="radio" name="eq5sub"><div class="radio-dot" style="width:14px;height:14px"></div>아니오</label>
+            </div>
+            <div id="eq5sub-stop" class="stop-msg" style="display:none;margin-top:10px;padding:12px;font-size:12px"><div class="stop-icon" style="font-size:20px">⚠️</div><h3 style="font-size:13px">6개월 이상 성실 변제 중인 분만 가능합니다</h3></div>
+          </div>
+        </div>
+
+        <!-- Q6 -->
+        <div style="background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:16px 18px" id="eq6-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
+              <span style="font-size:18px">🏛️</span>
+              <span style="font-size:14px;font-weight:600;color:var(--text)">국세체납 또는 압류 처분이 <strong>없습니다</strong></span>
+            </div>
+            <div class="radio-group" style="gap:6px">
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq6','pass')"><input type="radio" name="eq6"><div class="radio-dot" style="width:14px;height:14px"></div>예, 없음</label>
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq6','fail')"><input type="radio" name="eq6"><div class="radio-dot" style="width:14px;height:14px"></div>있음</label>
+            </div>
+          </div>
+          <div id="eq6-stop" class="stop-msg" style="display:none;margin-top:12px;padding:12px;font-size:12px"><div class="stop-icon" style="font-size:20px">⚠️</div><h3 style="font-size:13px">국세체납/압류 처분이 있으면 신청할 수 없습니다</h3></div>
+        </div>
+
+        <!-- Q7 -->
+        <div style="background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:16px 18px" id="eq7-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
+              <span style="font-size:18px">💳</span>
+              <span style="font-size:14px;font-weight:600;color:var(--text)">현재 금융기관 연체/채무불이행이 <strong>없습니다</strong></span>
+            </div>
+            <div class="radio-group" style="gap:6px">
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq7','pass')"><input type="radio" name="eq7"><div class="radio-dot" style="width:14px;height:14px"></div>예, 없음</label>
+              <label class="radio-btn" style="padding:6px 14px;font-size:12px" onclick="eligCheck(this,'eq7','fail')"><input type="radio" name="eq7"><div class="radio-dot" style="width:14px;height:14px"></div>있음</label>
+            </div>
+          </div>
+          <div id="eq7-stop" class="stop-msg" style="display:none;margin-top:12px;padding:12px;font-size:12px"><div class="stop-icon" style="font-size:20px">⚠️</div><h3 style="font-size:13px">연체/채무불이행 상태에서는 신청할 수 없습니다</h3></div>
+        </div>
+
+      </div><!-- /flex column -->
+
+      <div id="elig-pass" class="pass-msg" style="display:none;margin-top:20px">
+        <div style="font-size:28px;margin-bottom:8px">🎉</div>
+        <h3>자격요건을 모두 충족합니다!</h3>
+        <p>아래에서 대출 희망 용도를 선택한 후 다음 단계로 진행해 주세요.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 대출 희망 용도 선택 -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-header">
+      <div class="card-title"><div class="icon" style="background:var(--accent-light);font-size:16px;">🎯</div> 대출 희망 용도</div>
+      <div class="card-desc">신청하시려는 대출의 용도를 선택해 주세요</div>
+    </div>
+    <div class="card-body">
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="radio-group">
+          <label class="radio-btn" style="flex:1;justify-content:center;padding:16px 20px;font-size:15px" onclick="toggleRadio(this,'elig-purpose');checkEligAll()">
+            <input type="radio" name="elig-purpose" value="refinance"><div class="radio-dot"></div>
+            <div><strong>고금리 대환대출</strong><br><span style="font-size:12px;font-weight:400;color:var(--text-muted)">기존 고금리 대출을 저금리로 전환 · 최대 500만원</span></div>
+          </label>
+          <label class="radio-btn" style="flex:1;justify-content:center;padding:16px 20px;font-size:15px" onclick="toggleRadio(this,'elig-purpose');checkEligAll()">
+            <input type="radio" name="elig-purpose" value="living"><div class="radio-dot"></div>
+            <div><strong>생계비 대출</strong><br><span style="font-size:12px;font-weight:400;color:var(--text-muted)">긴급 생활비 지원 · 최대 300만원</span></div>
+          </label>
+        </div>
+      </div>
+      <div style="margin-top:14px;background:var(--warning-light);border:1px solid #E8D28A;border-radius:var(--radius-sm);padding:12px 16px;font-size:12px;color:var(--warning)">
+        <strong>※ 안내사항</strong><br>
+        · 심사 및 멘토링 결과에 따라 최종 대출 용도와 금액은 달라질 수 있습니다.<br>
+        · 고금리 대환대출로 신청하셨더라도, 상담 과정에서 생계비 대출이 더 적합하다고 판단될 경우 변경될 수 있으며, 그 반대의 경우도 동일합니다.<br>
+        · 위 선택은 신청 단계에서의 희망 사항이며, 담당 멘토와의 상담을 통해 최종 확정됩니다.
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-group" style="margin-top:20px">
+    <button class="btn btn-primary" id="elig-next-btn" onclick="goStep(1)" disabled style="opacity:.5">자격 확인 완료 → 기본정보 입력</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 1 — 동의 사항 ═══ -->
+<div class="page" id="page1">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><div class="icon" style="background:var(--primary-pale);font-size:16px;">📋</div> 대출 신청을 위한 개인정보 동의</div>
+      <div class="card-desc">대출 신청 및 심사를 위해 아래 개인정보 처리 내용에 대한 동의가 필요합니다. 각 항목의 내용을 확인한 후 동의해 주세요.</div>
+    </div>
+    <div class="card-body">
+
+      <!-- 전체 동의 -->
+      <div style="background:var(--primary-pale);border:1.5px solid var(--primary);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:15px;font-weight:700;color:var(--primary)">
+          <input type="checkbox" id="consent-all" style="width:18px;height:18px;accent-color:var(--primary)" onchange="toggleConsentAll()">
+          전체 동의
+        </label>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:6px;margin-left:28px">아래 필수 동의 항목에 모두 동의합니다.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+
+        <!-- 동의 1: 개인(신용)정보 수집·이용 동의 -->
+        <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;gap:8px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;font-size:13px">
+              <input type="checkbox" id="consent1" style="margin-top:1px;accent-color:var(--primary);width:16px;height:16px;flex-shrink:0" onchange="checkAllConsents()">
+              <span><strong style="color:var(--text)">[필수]</strong> <span style="color:var(--text)">개인(신용)정보 수집·이용 동의</span></span>
+            </label>
+            <button onclick="toggleConsentDetail('consent1-detail')" style="background:none;border:1px solid var(--gray-300);border-radius:4px;padding:4px 10px;font-size:11px;color:var(--gray-500);cursor:pointer;white-space:nowrap;font-family:inherit">내용 보기</button>
+          </div>
+          <div id="consent1-detail" style="display:none;border-top:1px solid var(--gray-200);padding:16px;background:#fff;font-size:12px;color:var(--text-muted);line-height:1.8">
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">1. 수집·이용 목적</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>대출 신청 접수 및 자격 확인</li>
+              <li>대출 심사, 약정 체결 및 대출 실행</li>
+              <li>대출거래의 설정, 유지, 이행 및 사후관리(상환관리, 연체관리 등)</li>
+              <li>민원 처리 및 분쟁 해결</li>
+              <li>사업 운영, 성과 분석 및 통계 작성</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">2. 수집 항목</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li><strong>개인(신용)정보:</strong> 성명, 생년월일, 성별, 연락처, 주소, 이메일, 직업, 소득, 재산, 채무 등 신청서에 기재된 정보 및 신청인이 제공한 정보</li>
+              <li><strong>본인확인정보:</strong> 휴대폰번호, DI, CI</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">3. 주민등록번호 처리 안내</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>사회연대은행은 관련 법령에 따라 필요한 경우에 한하여 주민등록번호를 제한적으로 처리하며, 해당 정보는 암호화하여 안전하게 보관됩니다.</li>
+              <li>주민등록번호는 업무 처리 과정에서 직접 활용되지 않으며, 내부적으로는 DI 기반의 고객식별통합자(CID)를 통해 고객 식별 및 관리가 이루어집니다.</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">4. 보유 및 이용기간</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>대출 신청일로부터 상환 완료 시까지</li>
+              <li>단, 관계 법령에 따라 보존할 필요가 있는 경우 해당 기간까지 보관</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">5. 동의 거부 및 불이익</p>
+            <ul style="margin:0 0 0 16px;padding:0">
+              <li>신청인은 개인(신용)정보 수집·이용에 대한 동의를 거부할 수 있습니다.</li>
+              <li>다만, 동의를 거부할 경우 대출 신청 및 이용이 제한될 수 있습니다.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 동의 2: 개인(신용)정보 조회 동의 -->
+        <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;gap:8px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;font-size:13px">
+              <input type="checkbox" id="consent2" style="margin-top:1px;accent-color:var(--primary);width:16px;height:16px;flex-shrink:0" onchange="checkAllConsents()">
+              <span><strong style="color:var(--text)">[필수]</strong> <span style="color:var(--text)">개인(신용)정보 조회 동의</span></span>
+            </label>
+            <button onclick="toggleConsentDetail('consent2-detail')" style="background:none;border:1px solid var(--gray-300);border-radius:4px;padding:4px 10px;font-size:11px;color:var(--gray-500);cursor:pointer;white-space:nowrap;font-family:inherit">내용 보기</button>
+          </div>
+          <div id="consent2-detail" style="display:none;border-top:1px solid var(--gray-200);padding:16px;background:#fff;font-size:12px;color:var(--text-muted);line-height:1.8">
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">1. 조회 목적</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>신청자의 신용상태 확인</li>
+              <li>대출 심사 및 승인 여부 판단</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">2. 조회 대상기관</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>코리아크레딧뷰로㈜</li>
+              <li>NICE평가정보㈜</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">3. 조회 항목</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li><strong>신용거래정보:</strong> 대출, 보증, 신용카드 이용 및 연체 관련 정보 등</li>
+              <li><strong>신용도판단정보:</strong> 연체, 채무불이행, 부도 등 신용위험 관련 정보</li>
+              <li><strong>신용능력정보:</strong> 소득, 재산, 채무 등 상환능력 관련 정보</li>
+              <li><strong>공공정보:</strong> 국세·지방세 체납, 채무조정, 개인회생·파산 등</li>
+              <li>신용평점 및 신용등급 등</li>
+              <li>기타 개인신용정보 및 신용평가와 관련된 정보</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">4. 조회 시 제공되는 정보</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>성명, 생년월일, 성별, 연락처 등 본인확인에 필요한 정보</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">5. 조회 동의의 효력</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>본 동의는 대출 심사 및 대출거래의 설정, 유지, 이행 및 사후관리에 필요한 범위 내에서 개인신용정보 조회에 적용됩니다.</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">6. 동의 거부 및 불이익</p>
+            <ul style="margin:0 0 0 16px;padding:0">
+              <li>신청인은 개인(신용)정보 조회에 대한 동의를 거부할 수 있습니다.</li>
+              <li>다만, 동의를 거부할 경우 신용상태 확인이 불가능하여 대출 심사가 제한될 수 있습니다.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 동의 3: 개인(신용)정보 제3자 제공 동의 -->
+        <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;gap:8px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;font-size:13px">
+              <input type="checkbox" id="consent3" style="margin-top:1px;accent-color:var(--primary);width:16px;height:16px;flex-shrink:0" onchange="checkAllConsents()">
+              <span><strong style="color:var(--text)">[필수]</strong> <span style="color:var(--text)">개인(신용)정보 제3자 제공 동의</span></span>
+            </label>
+            <button onclick="toggleConsentDetail('consent3-detail')" style="background:none;border:1px solid var(--gray-300);border-radius:4px;padding:4px 10px;font-size:11px;color:var(--gray-500);cursor:pointer;white-space:nowrap;font-family:inherit">내용 보기</button>
+          </div>
+          <div id="consent3-detail" style="display:none;border-top:1px solid var(--gray-200);padding:16px;background:#fff;font-size:12px;color:var(--text-muted);line-height:1.8">
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">1. 제공받는 자</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>코리아크레딧뷰로㈜</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">2. 제공 목적</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>대출거래의 설정, 유지, 이행 및 사후관리</li>
+              <li>개인신용정보 조회 서비스의 안정적 이용을 위한 최소한의 정보 처리</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">3. 제공 항목</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li><strong>개인식별정보:</strong> 성명, 생년월일, 성별 등</li>
+              <li><strong>신용거래정보:</strong> 대출 실행 정보 및 상환 여부 등</li>
+              <li>기타 상기 목적 수행에 필요한 최소한의 정보</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">4. 보유 및 이용기간</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>관련 법령 및 계약에서 정한 기간까지</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">5. 제공 범위 및 제한</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>제공된 정보는 상기 목적 범위 내에서만 이용되며, 제3자에게 추가 제공되거나 신용정보집중기관 등에 등록되지 않습니다.</li>
+            </ul>
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">6. 동의 거부 및 불이익</p>
+            <ul style="margin:0 0 0 16px;padding:0">
+              <li>신청인은 개인(신용)정보 제3자 제공에 대한 동의를 거부할 수 있습니다.</li>
+              <li>다만, 동의를 거부할 경우 대출 실행 및 이용이 제한될 수 있습니다.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div><!-- /개별 동의 -->
+
+      <div id="consent-warning" style="display:none;margin-top:12px;background:#FFF0F0;border:1px solid #FFCDD2;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:#C62828;text-align:center">
+        ⚠️ 모든 필수 동의 항목에 체크해 주세요.
+      </div>
+      <div class="btn-group">
+        <button class="btn-back" onclick="goStep(0)">← 이전</button>
+        <button class="btn btn-primary" id="consent-next-btn" onclick="goStepWithConsent()" disabled style="opacity:.5">동의 완료 → 신청서 작성</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STEP 2 — 신청서 ═══ -->
+<div class="page" id="page2">
+  <div class="survey-progress" id="survey-progress-bar" style="display:none">
+    <div class="survey-progress-inner">
+      <span class="survey-progress-label">진행: <strong id="prog-current">0</strong>/<strong id="prog-total">—</strong></span>
+      <div class="survey-progress-track"><div class="survey-progress-fill" id="prog-fill" style="width:0%"></div></div>
+      <span class="survey-progress-pct" id="prog-pct">0%</span>
+    </div>
+  </div>
+
+  <!-- 임시저장 바는 하단 고정으로 이동 -->
+
+  <!-- CAT 01 기본정보 -->
+  <div class="card" style="border-radius:14px;overflow:hidden">
+    <div class="cat-header"><span class="cat-num">01</span><div><div class="cat-title-text">기본 정보</div></div></div>
+    <div class="card-body">
+
+      <p class="section-title">01-1 · 신청자 정보</p>
+      <div class="form-row">
+        <label class="form-label">성명</label>
+        <input class="form-input" type="text" placeholder="실명을 입력해 주세요">
+      </div>
+      <div class="form-row">
+        <label class="form-label">주민등록번호</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="form-input" type="text" placeholder="앞 6자리" maxlength="6" style="width:140px;text-align:center;letter-spacing:2px">
+          <span style="font-size:18px;color:var(--gray-400)">—</span>
+          <input class="form-input" type="password" placeholder="뒤 7자리" maxlength="7" style="width:140px;text-align:center;letter-spacing:2px">
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:4px">※ 주민등록번호는 암호화 처리되며, 대출 심사 목적으로만 사용됩니다.</p>
+      </div>
+      <div class="form-row">
+        <label class="form-label">휴대전화 번호</label>
+        <input class="form-input" type="tel" placeholder="01012345678">
+      </div>
+
+      <p class="section-title">01-2 · 연락처 및 주소</p>
+      <div class="form-row">
+        <label class="form-label">주민등록상 주소</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input class="form-input" type="text" id="addr-zipcode" placeholder="우편번호" style="width:120px" readonly>
+          <button class="btn-send" onclick="openPostcode()" style="white-space:nowrap">주소 검색</button>
+        </div>
+        <input class="form-input" type="text" id="addr-road" placeholder="도로명 주소" style="margin-bottom:8px" readonly>
+        <input class="form-input" type="text" id="addr-jibun" placeholder="지번 주소" style="margin-bottom:8px;font-size:12px;color:var(--text-muted)" readonly>
+        <input class="form-input" type="text" id="addr-detail" placeholder="상세주소 입력 (동·호수 등)">
+      </div>
+      <div class="form-row">
+        <label class="form-label">이메일 주소</label>
+        <input class="form-input" type="email" placeholder="example@email.com">
+      </div>
+
+      <p class="section-title">01-3 · 거주 환경</p>
+      <div class="form-row">
+        <label class="form-label">현재 거주하고 계신 형태를 선택해 주세요.</label>
+        <div class="radio-group">
+          <label class="radio-btn" onclick="toggleRadio(this,'res');updateResCost('자가')"><input type="radio" name="res"><div class="radio-dot"></div>자가</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'res');updateResCost('전세')"><input type="radio" name="res"><div class="radio-dot"></div>전세</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'res');updateResCost('월세')"><input type="radio" name="res"><div class="radio-dot"></div>월세</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'res');updateResCost('임대')"><input type="radio" name="res"><div class="radio-dot"></div>임대주택 (LH·SH 등)</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'res');updateResCost('동거')"><input type="radio" name="res"><div class="radio-dot"></div>가족·친척 집 동거</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'res');updateResCost('고시원')"><input type="radio" name="res"><div class="radio-dot"></div>고시원·쉐어하우스</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'res');updateResCost('기타')"><input type="radio" name="res"><div class="radio-dot"></div>기타</label>
+        </div>
+        <div id="res-cost-wrap" style="display:none;margin-top:14px;background:var(--primary-pale);border:1px solid #E0E0E0;border-radius:var(--radius-sm);padding:14px 16px"></div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">앞으로 6개월 안에 이사 계획이 있으신가요?</label>
+        <div class="radio-group">
+          <label class="radio-btn" onclick="toggleRadio(this,'move-plan')"><input type="radio" name="move-plan"><div class="radio-dot"></div>없음</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'move-plan')"><input type="radio" name="move-plan"><div class="radio-dot"></div>가능성 있음</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'move-plan')"><input type="radio" name="move-plan"><div class="radio-dot"></div>거의 확실함</label>
+        </div>
+      </div>
+
+      <p class="section-title">01-4 · 가구 형태</p>
+      <div class="form-row">
+        <label class="form-label">가구원 수 (본인 포함)</label>
+        <div class="radio-group">
+          <label class="radio-btn" onclick="toggleRadio(this,'hh')"><input type="radio" name="hh"><div class="radio-dot"></div>1명</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'hh')"><input type="radio" name="hh"><div class="radio-dot"></div>2명</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'hh')"><input type="radio" name="hh"><div class="radio-dot"></div>3명</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'hh')"><input type="radio" name="hh"><div class="radio-dot"></div>4명</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'hh')"><input type="radio" name="hh"><div class="radio-dot"></div>5명+</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">부양가족</label>
+        <div class="radio-group">
+          <label class="radio-btn" onclick="toggleRadio(this,'dependent');toggleConditional('dep-detail',false)"><input type="radio" name="dependent"><div class="radio-dot"></div>없음</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'dependent');toggleConditional('dep-detail',true)"><input type="radio" name="dependent"><div class="radio-dot"></div>있음</label>
+        </div>
+        <div class="conditional" id="dep-detail">
+          <input class="form-input" type="text" placeholder="예) 자녀 7세, 부모 68세 (관계와 나이를 간략히)">
+        </div>
+      </div>
+
+      <p class="section-title">01-5 · 정부지원 유형</p>
+      <div class="form-row">
+        <label class="form-label">현재 받고 계신 정부 지원 <span class="opt">(해당 모두 선택)</span></label>
+        <div class="check-group">
+          <label class="check-btn" onclick="toggleGovSupport(this,false)"><div class="check-mark"></div>기초수급(생계)</label>
+          <label class="check-btn" onclick="toggleGovSupport(this,false)"><div class="check-mark"></div>기초수급(주거)</label>
+          <label class="check-btn" onclick="toggleGovSupport(this,false)"><div class="check-mark"></div>기초수급(의료)</label>
+          <label class="check-btn" onclick="toggleGovSupport(this,false)"><div class="check-mark"></div>차상위계층</label>
+          <label class="check-btn" onclick="toggleGovSupport(this,false)"><div class="check-mark"></div>한부모가족</label>
+          <label class="check-btn" onclick="toggleGovSupport(this,false)"><div class="check-mark"></div>자립준비청년</label>
+          <label class="check-btn" onclick="toggleGovSupport(this,true)"><div class="check-mark"></div>해당없음</label>
+        </div>
+        <div id="gov-total-wrap" style="display:none;margin-top:12px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <label style="font-size:13px;font-weight:500;color:var(--gray-700)">월 정부지원금 총액</label>
+            <input class="form-input" type="number" placeholder="0" id="gov-total-amount" oninput="validateNumLimit(this);syncGovIncome()" class="num-limit" style="width:120px;text-align:right">
+            <span style="font-size:13px;color:var(--text-muted)">만 원</span>
+          </div>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:4px">※ 소득 항목에 자동 합산됩니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAT 02 부채 -->
+  <div class="card" style="border-radius:14px;overflow:hidden">
+    <div class="cat-header" style="background:linear-gradient(135deg,#1E1E1E,#3D3D3D)"><span class="cat-num">02</span><div><div class="cat-title-text">재무 상태 및 부채 현황</div></div></div>
+    <div class="card-body">
+
+      <p class="section-title">02-1 · 부채 현황 (통합 명세)</p>
+      <div class="info-box" style="margin-bottom:14px">
+        <span class="icon">📋</span>
+        <span>은행·카드사·저축은행·캐피탈·대부업·학자금·개인차용 등 <strong>모든 부채</strong>를 한 테이블에 입력해 주세요.</span>
+      </div>
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 16px;background:var(--primary-pale);border:1.5px solid #E0E0E0;border-radius:var(--radius-sm);margin-bottom:14px">
+          <input type="checkbox" id="no-debt-check" style="accent-color:var(--primary);width:16px;height:16px" onchange="toggleNoDebt()">
+          <span style="font-size:14px;font-weight:600;color:var(--primary)">현재 부채가 없습니다</span>
+          <span style="font-size:12px;color:var(--text-muted);margin-left:4px">(채무조정 완료 등으로 잔여 부채가 없는 경우 체크)</span>
+        </label>
+        <div id="debt-table-area">
+        <div style="overflow-x:auto">
+          <table class="mesei-table" id="all-debt-table">
+            <thead>
+              <tr><th>대출처</th><th>상품 유형</th><th>기관명</th><th>약정금액</th><th>현재잔액</th><th>월상환원리금</th><th>금리</th><th>대출시작</th><th>대출만료</th><th></th></tr>
+            </thead>
+            <tbody id="all-debt-tbody">
+              <tr>
+                <td><select class="form-select" style="min-width:130px;font-size:12px;padding:6px 4px"><option value="">유형 선택</option>
+                  <optgroup label="금융회사"><option>은행</option><option>저축은행</option><option>카드사(카드론)</option><option>캐피탈</option><option>보험사</option></optgroup>
+                  <optgroup label="정책/공공"><option>정책서민금융(햇살론 등)</option><option>학자금대출</option><option>서민금융진흥원</option><option>신용회복위원회</option></optgroup>
+                  <optgroup label="기타"><option>대부업체</option><option>개인차용(가족·지인)</option><option>기타</option></optgroup>
+                </select></td>
+                <td><select class="form-select" style="min-width:160px;font-size:12px;padding:6px 4px"><option value="">선택</option><option>일반신용대출</option><option>주택담보대출</option><option>정책서민금융 (햇살론/사잇돌/디딤돌/새희망홀씨 등)</option><option>카드론</option><option>차량구입 대출</option><option>기타</option></select></td>
+                <td><input class="form-input" type="text" placeholder="기관명" style="min-width:80px"></td>
+                <td><div style="display:flex;align-items:center;gap:3px"><input class="form-input num-limit" type="number" placeholder="0" oninput="validateNumLimit30k(this)" style="min-width:70px;text-align:right"><span style="font-size:11px;color:var(--text-muted);white-space:nowrap">만 원</span></div></td>
+                <td><div style="display:flex;align-items:center;gap:3px"><input class="form-input num-limit" type="number" placeholder="0" oninput="validateNumLimit30k(this)" style="min-width:70px;text-align:right"><span style="font-size:11px;color:var(--text-muted);white-space:nowrap">만 원</span></div></td>
+                <td><div style="display:flex;align-items:center;gap:3px"><input class="form-input num-limit" type="number" placeholder="0" oninput="validateNumLimit(this);syncDebtTotal()" style="min-width:70px;text-align:right"><span style="font-size:11px;color:var(--text-muted);white-space:nowrap">만 원</span></div></td>
+                <td><select class="form-select" style="min-width:100px;font-size:12px;padding:6px 4px"><option value="">선택</option><option>5% 미만</option><option>5~10%</option><option>10~15%</option><option>15~20%</option><option>20% 이상</option></select></td>
+                <td><input class="form-input" type="month" style="min-width:118px;font-size:12px"></td>
+                <td><input class="form-input" type="month" style="min-width:118px;font-size:12px"></td>
+                <td><button onclick="removeRow(this)" style="background:none;border:none;color:#CC4444;cursor:pointer;font-size:18px;padding:0 4px">×</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="mesei-add" onclick="addDebtRow()">+ 대출 항목 추가</button>
+        <div style="margin-top:12px;padding:10px 14px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;font-size:13px;display:flex;justify-content:space-between;align-items:center">
+          <span style="color:var(--text-muted)">월 상환원리금 합계 <span style="font-size:11px">(생활비에 자동 반영)</span></span>
+          <strong id="debt-monthly-display" style="color:var(--primary)">0 만 원</strong>
+        </div>
+        </div><!-- /debt-table-area -->
+      </div>
+
+      <p class="section-title">02-2 · 채무조정 현황</p>
+      <div style="background:#E8F0FE;border:1px solid #90B4E0;border-radius:8px;padding:10px 14px;font-size:12px;color:#1A5276;margin-bottom:14px">
+        💡 <strong>「다시, 봄」은 채무조정 중 성실 상환 중인 분도 신청 가능합니다.</strong>
+      </div>
+      <div class="form-row">
+        <label class="form-label">채무조정 이력</label>
+        <div class="radio-group">
+          <label class="radio-btn" onclick="toggleRadio(this,'debt-adj');toggleConditional('dadj-ing',false);toggleConditional('dadj-past',false)"><input type="radio" name="debt-adj"><div class="radio-dot"></div>없음</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'debt-adj');toggleConditional('dadj-ing',true);toggleConditional('dadj-past',false)"><input type="radio" name="debt-adj"><div class="radio-dot"></div>현재 진행 중</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'debt-adj');toggleConditional('dadj-ing',false);toggleConditional('dadj-past',true)"><input type="radio" name="debt-adj"><div class="radio-dot"></div>과거 완료</label>
+        </div>
+        <div class="conditional" id="dadj-ing">
+          <div class="form-row" style="margin-bottom:14px">
+            <label class="form-label">유형 선택</label>
+            <div class="radio-group">
+              <label class="radio-btn" onclick="toggleRadio(this,'adj-type')"><input type="radio" name="adj-type"><div class="radio-dot"></div>개인회생</label>
+              <label class="radio-btn" onclick="toggleRadio(this,'adj-type')"><input type="radio" name="adj-type"><div class="radio-dot"></div>파산·면책</label>
+              <label class="radio-btn" onclick="toggleRadio(this,'adj-type')"><input type="radio" name="adj-type"><div class="radio-dot"></div>신용회복위원회 개인워크아웃</label>
+            </div>
+          </div>
+          <div class="form-row" style="margin-bottom:14px">
+            <label class="form-label">채무조정 확인서류 첨부</label>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">변제계획 인가결정문, 워크아웃 약정서 등을 첨부해 주세요.</p>
+            <label style="display:flex;align-items:center;gap:10px;padding:14px 18px;border:2px dashed #E0E0E0;border-radius:var(--radius-sm);cursor:pointer;background:#fff;transition:all .2s" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='#E0E0E0'">
+              <input type="file" accept="image/*,.pdf" multiple style="display:none" onchange="showFileName(this,'dadj-file-name')">
+              <span style="font-size:20px">📎</span>
+              <div>
+                <span style="font-size:13px;font-weight:600;color:var(--primary)">파일 선택</span>
+                <span style="font-size:12px;color:var(--text-muted);display:block;margin-top:2px">이미지(JPG, PNG) 또는 PDF / 최대 10MB</span>
+              </div>
+            </label>
+            <div id="dadj-file-name" style="margin-top:8px;font-size:13px;color:var(--success);display:none"></div>
+          </div>
+          <div class="form-row" style="margin-bottom:14px">
+            <label class="form-label">상환 유예 이력</label>
+            <div class="radio-group">
+              <label class="radio-btn" onclick="toggleRadio(this,'adj-defer')"><input type="radio" name="adj-defer"><div class="radio-dot"></div>없음(연속 상환)</label>
+              <label class="radio-btn" onclick="toggleRadio(this,'adj-defer')"><input type="radio" name="adj-defer"><div class="radio-dot"></div>1회 유예</label>
+              <label class="radio-btn" onclick="toggleRadio(this,'adj-defer')"><input type="radio" name="adj-defer"><div class="radio-dot"></div>2회 이상 유예</label>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">채무 재조정 이력</label>
+            <div class="radio-group">
+              <label class="radio-btn" onclick="toggleRadio(this,'adj-readj')"><input type="radio" name="adj-readj"><div class="radio-dot"></div>없음(연속 상환)</label>
+              <label class="radio-btn" onclick="toggleRadio(this,'adj-readj')"><input type="radio" name="adj-readj"><div class="radio-dot"></div>경험 있음</label>
+            </div>
+          </div>
+        </div>
+        <div class="conditional" id="dadj-past">
+          <textarea class="form-textarea" placeholder="완료 시점과 이유를 간략히 설명해 주세요."></textarea>
+        </div>
+      </div>
+
+      <p class="section-title" style="color:#1E1E1E;border-left-color:#FFE300">02-3 · 신청 배경</p>
+      <div class="info-box" style="margin-bottom:14px"><span class="icon">💬</span><span>이 항목은 담당 멘토가 직접 읽습니다. 솔직하게 적어주실수록 더 잘 도와드릴 수 있습니다.</span></div>
+      <div class="form-row">
+        <label class="form-label">현재 어려움이 시작된 계기와, 이번 대출을 신청하게 된 상황을 편하게 적어주세요.</label>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">① 언제부터, 어떤 이유로 어려워졌는지 (부채·연체 발생 배경) &nbsp;② 현재 이 대출이 필요한 구체적인 이유를 함께 적어주세요.</p>
+        <textarea class="form-textarea" id="ta-bg-reason" style="min-height:160px" placeholder="예) 3년 전 다니던 회사가 갑자기 폐업하면서 실직했고, 재취업이 생각보다 오래 걸려 그 사이에 카드값과 생활비가 밀리기 시작했습니다. 지금은 재취업에 성공했지만 밀린 고금리 대출 이자가 매달 부담이 되어, 이번 대출로 고금리 채무를 정리하고 싶습니다. (5~10줄 권장)"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">앞으로 1년 후, 어떤 상황이 되기를 바라시는지 자유롭게 적어주세요.</label>
+        <textarea class="form-textarea" id="ta-future-hope" style="min-height:80px" placeholder="2~3줄 정도로 편하게 적어주세요."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAT 03 소득·생활비 -->
+  <div class="card" style="border-radius:14px;overflow:hidden">
+    <div class="cat-header" style="background:linear-gradient(135deg,#2A2A2A,#444444)"><span class="cat-num">03</span><div><div class="cat-title-text">소득과 생활비</div></div></div>
+    <div class="card-body">
+      <p class="section-title">03-1 · 소득</p>
+      <div class="form-row">
+        <label class="form-label">소득 유형 <span class="opt">(해당 모두)</span></label>
+        <div class="check-group">
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>근로(정규직)</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>근로(계약직·일용직)</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>사업(자영업·프리랜서)</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>정부지원금</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>가족 지원</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>기타</label>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:18px">
+        <label class="form-label">현재 직장(사업체) 정보</label>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">현재 재직 중인 직장 정보를 입력해 주세요. (무직인 경우 빈 칸으로 제출)</p>
+        <div style="overflow-x:auto">
+          <table class="mesei-table" id="employ-table">
+            <thead>
+              <tr>
+                <th>직장(사업체)명</th>
+                <th>근무시작</th>
+                <th>담당업무</th>
+                <th>근무형태</th>
+              </tr>
+            </thead>
+            <tbody id="employ-tbody">
+              <tr>
+                <td><input class="form-input" type="text" placeholder="예) (사)함께만드는세상" style="min-width:120px"></td>
+                <td><input class="form-input" type="month" style="min-width:118px;font-size:12px"></td>
+                <td><input class="form-input" type="text" placeholder="예) 사무/영업/생산" style="min-width:100px"></td>
+                <td><select class="form-select" style="min-width:120px;font-size:12px;padding:6px 4px">
+                  <option value="">선택</option>
+                  <option>정규직</option>
+                  <option>계약직</option>
+                  <option>일용직·아르바이트</option>
+                  <option>프리랜서·특수고용</option>
+                  <option>자영업</option>
+                  <option>플랫폼 노동</option>
+                </select></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px">
+        <label class="form-label">현재 직장(소득원)을 6개월 이상 유지 가능하신가요?</label>
+        <div class="radio-group">
+          <label class="radio-btn" onclick="toggleRadio(this,'inc-sustain');toggleConditional('inc-change-wrap',false)"><input type="radio" name="inc-sustain"><div class="radio-dot"></div>예, 유지 예정</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'inc-sustain');toggleConditional('inc-change-wrap',true)"><input type="radio" name="inc-sustain"><div class="radio-dot"></div>불확실</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'inc-sustain');toggleConditional('inc-change-wrap',true)"><input type="radio" name="inc-sustain"><div class="radio-dot"></div>이직·전환 예정</label>
+        </div>
+        <div class="conditional" id="inc-change-wrap">
+          <label class="form-label">향후 소득 변동 전망을 선택해 주세요.</label>
+          <div class="radio-group">
+            <label class="radio-btn" onclick="toggleRadio(this,'inc-change')"><input type="radio" name="inc-change"><div class="radio-dot"></div>소득 감소 가능성 있음</label>
+            <label class="radio-btn" onclick="toggleRadio(this,'inc-change')"><input type="radio" name="inc-change"><div class="radio-dot"></div>소득 감소 거의 확실</label>
+            <label class="radio-btn" onclick="toggleRadio(this,'inc-change')"><input type="radio" name="inc-change"><div class="radio-dot"></div>소득 증가 가능성 있음</label>
+            <label class="radio-btn" onclick="toggleRadio(this,'inc-change')"><input type="radio" name="inc-change"><div class="radio-dot"></div>소득 증가 거의 확실</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:18px">
+        <label class="form-label">월 소득 (항목별 실액)</label>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">프리랜서·자영업은 최근 3개월 평균으로 입력해 주세요.</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><label class="income-row-label" style="font-size:13px;font-weight:500;width:180px;flex-shrink:0">근로소득</label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="inc-work" oninput="validateNumLimit(this);updateCalc()" class="num-limit" style="width:120px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><label class="income-row-label" style="font-size:13px;font-weight:500;width:180px;flex-shrink:0">사업소득</label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="inc-biz" oninput="validateNumLimit(this);updateCalc()" class="num-limit" style="width:120px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><label class="income-row-label" style="font-size:13px;font-weight:500;width:180px;flex-shrink:0">정부지원금 <span style="font-size:11px;color:var(--accent)">※ 자동</span></label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="inc-gov" style="width:120px;text-align:right;background:#f5f5f5" readonly><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><label class="income-row-label" style="font-size:13px;font-weight:500;width:180px;flex-shrink:0">가족지원/기타</label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="inc-etc" oninput="validateNumLimit(this);updateCalc()" class="num-limit" style="width:120px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+        </div>
+        <div style="margin-top:12px;padding:10px 14px;background:var(--primary-pale);border:1px solid #E0E0E0;border-radius:8px;display:flex;justify-content:space-between">
+          <span style="font-size:13px;font-weight:600;color:var(--primary)">월 소득 합계</span>
+          <span style="font-size:16px;font-weight:700;color:var(--primary)" id="income-total-display">— 만원</span>
+        </div>
+      </div>
+
+      <p class="section-title">03-2 · 월 생활비</p>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">꼼꼼하지 않아도 괜찮습니다. 대략적인 금액이라도 적어주시면 상담 과정에서 함께 지출을 정리하고 무리 없는 상환 계획을 세우는 데 큰 도움이 됩니다.</p>
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="background:var(--gray-50);border-radius:8px 8px 0 0;padding:8px 14px;border:1px solid var(--gray-200);border-bottom:none"><span style="font-size:11px;font-weight:700;color:var(--primary)">🏠 주거</span></div>
+        <div style="border:1px solid var(--gray-200);border-bottom:none;padding:10px 14px;display:flex;align-items:center;gap:12px"><label style="font-size:13px;font-weight:500;flex:1">월 주거비</label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="exp-rent" oninput="validateNumLimit(this);updateCalc()" class="num-limit" style="width:100px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+        <div style="background:var(--gray-50);padding:8px 14px;border:1px solid var(--gray-200);border-bottom:none"><span style="font-size:11px;font-weight:700;color:#2E6B2E">🍚 생활</span></div>
+        <div style="border:1px solid var(--gray-200);border-bottom:none;padding:10px 14px;display:flex;align-items:center;gap:12px"><label style="font-size:13px;font-weight:500;flex:1">식비</label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="exp-food" oninput="validateNumLimit(this);updateCalc()" class="num-limit" style="width:100px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+        <div style="border:1px solid var(--gray-200);border-bottom:none;padding:10px 14px;display:flex;align-items:center;gap:12px"><label style="font-size:13px;font-weight:500;flex:1">교통비</label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="exp-transit" oninput="validateNumLimit(this);updateCalc()" class="num-limit" style="width:100px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+        <div style="border:1px solid var(--gray-200);border-bottom:none;padding:10px 14px;display:flex;align-items:center;gap:12px"><label style="font-size:13px;font-weight:500;flex:1">통신비</label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="exp-comm" oninput="validateNumLimit(this);updateCalc()" class="num-limit" style="width:100px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+        <div style="background:var(--gray-50);padding:8px 14px;border:1px solid var(--gray-200);border-bottom:none"><span style="font-size:11px;font-weight:700;color:#8B4513">🏥 의료</span></div>
+        <div style="border:1px solid var(--gray-200);border-bottom:none;padding:10px 14px;display:flex;align-items:center;gap:12px"><label style="font-size:13px;font-weight:500;flex:1">의료비</label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="exp-medical" oninput="validateNumLimit(this);updateCalc()" class="num-limit" style="width:100px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+        <div style="background:var(--gray-50);padding:8px 14px;border:1px solid var(--gray-200);border-bottom:none"><span style="font-size:11px;font-weight:700;color:#1A3A70">💳 금융</span></div>
+        <div style="border:1px solid var(--gray-200);border-bottom:none;padding:10px 14px;display:flex;align-items:center;gap:12px"><label style="font-size:13px;font-weight:500;flex:1">보험료 <span style="font-size:11px;color:var(--accent)">※ 국민건강보험 제외</span></label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="exp-insure" oninput="validateNumLimit(this);updateCalc()" class="num-limit" style="width:100px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+        <div style="border:1px solid var(--gray-200);border-bottom:none;padding:10px 14px;display:flex;align-items:center;gap:12px"><label style="font-size:13px;font-weight:500;flex:1">부채 상환금 <span style="font-size:11px;color:var(--text-muted)">(02-1+02-2 자동)</span></label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="exp-loan" style="width:100px;text-align:right;background:#f5f5f5" readonly><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+        <div style="border:1px solid var(--gray-200);border-bottom:none;padding:10px 14px;display:flex;align-items:center;gap:12px"><label style="font-size:13px;font-weight:500;flex:1">월 저축액</label><div style="display:flex;align-items:center;gap:6px"><input class="form-input num-limit" type="number" placeholder="0" id="exp-saving" oninput="validateNumLimit(this);updateCalc()" style="width:100px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+        <div style="border:1px solid var(--gray-200);border-radius:0 0 8px 8px;padding:10px 14px;display:flex;align-items:center;gap:12px"><label style="font-size:13px;font-weight:500;flex:1">기타 고정지출 <span style="font-size:11px;color:var(--text-muted)">(생필품/문화/여가 등)</span></label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" id="exp-etc" oninput="validateNumLimit(this);updateCalc()" class="num-limit" style="width:100px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div>
+      </div>
+      <div class="calc-box">
+        <div class="calc-title">【 자동 산출 】 순가처분소득</div>
+        <div class="calc-row"><span>월 소득 합계</span><span id="calc-income">— 만원</span></div>
+        <div class="calc-row"><span>월 필수지출 합계</span><span id="calc-expense">— 만원</span></div>
+        <div class="calc-row calc-total"><span>순가처분소득</span><span id="calc-net" style="font-size:20px">— 만원</span></div>
+      </div>
+
+      <p class="section-title" style="margin-top:24px">03-3 · 위기 대응 여건</p>
+      <div class="form-row">
+        <label class="form-label">예상치 못한 상황(갑작스러운 의료비, 실직 등)이 생겼을 때 어떻게 대처하실 것 같으신가요?</label>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">보유 현금, 도움받을 수 있는 주변 상황, 처분 가능한 자산 등 현실적으로 생각나는 것들을 편하게 적어주세요.</p>
+        <textarea class="form-textarea" style="min-height:90px" placeholder="예) 부모님께 일시적으로 도움을 받을 수 있고, 적금이 만기되는 게 있어서 급한 상황은 어느 정도 버틸 수 있을 것 같습니다."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAT 04 대출 계획 -->
+  <div class="card" style="border-radius:14px;overflow:hidden">
+    <div class="cat-header" style="background:linear-gradient(135deg,#333333,#4D4D4D)"><span class="cat-num">04</span><div><div class="cat-title-text">대출 계획</div></div></div>
+    <div class="card-body">
+      <p class="section-title">04-1 · 신청 내용</p>
+      <!-- 자격확인에서 선택한 트랙 표시 -->
+      <div id="selected-track-display" style="background:var(--primary-pale);border:1.5px solid #E0E0E0;border-radius:var(--radius);padding:16px 20px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px">자격확인에서 선택한 대출 트랙</div>
+        <div id="selected-track-label" style="font-size:16px;font-weight:700;color:var(--primary)">—</div>
+      </div>
+      <!-- 생활비 트랙인 경우: 세부 용도 -->
+      <div id="purpose-living-detail" style="display:none;margin-bottom:16px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:14px 16px">
+        <label class="form-label">생활비 세부 용도를 선택해 주세요.</label>
+        <div class="radio-group">
+          <label class="radio-btn" onclick="toggleRadio(this,'living-sub')"><input type="radio" name="living-sub"><div class="radio-dot"></div>생계</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'living-sub')"><input type="radio" name="living-sub"><div class="radio-dot"></div>의료비</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'living-sub')"><input type="radio" name="living-sub"><div class="radio-dot"></div>주거 관련</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'living-sub')"><input type="radio" name="living-sub"><div class="radio-dot"></div>기타</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">희망 금액</label>
+        <div class="input-with-btn">
+          <input class="form-input" type="number" placeholder="0" id="loan-amount" oninput="validateNumLimit(this)" class="num-limit" style="max-width:200px">
+          <span style="align-self:center;font-size:14px;color:var(--text-muted)" id="loan-max-label">만원 (최대 500만원)</span>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:6px">※ 최종 금액은 멘토 상담 후 함께 결정됩니다.</p>
+      </div>
+      <p class="section-title">04-2 · 사용 계획과 상환 계획</p>
+      <div class="form-row">
+        <label class="form-label">대출금을 어떻게 사용하고, 어떻게 상환할 계획인지 함께 적어주세요.</label>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">① 대출금 사용 계획 (무엇에, 얼마를 쓸 것인지) &nbsp;② 상환 계획 (어떤 소득으로, 얼마씩 갚을 것인지) &nbsp;③ 예상치 못한 상황 시 대처 방안 — 세 가지를 한 번에 적어주세요.</p>
+        <textarea class="form-textarea" id="ta-loan-plan" style="min-height:160px" placeholder="예) ① A카드론 잔액 300만 원을 전액 상환해 월 이자 부담을 줄이고, 나머지 200만 원은 밀린 관리비와 생활비를 충당할 예정입니다.&#10;② 매달 급여(약 180만 원)에서 월 상환액 15만 원을 자동이체로 납입할 계획이며, 현재 직장에서 올해 안에 정규직 전환이 예정되어 있어 소득이 안정될 전망입니다.&#10;③ 만약 소득이 줄어드는 경우, 불필요한 지출을 먼저 줄이고 담당자와 상환 일정을 협의하겠습니다.&#10;(5~10줄 권장)"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">대출 상환 자동이체 설정 동의</label>
+        <div style="background:var(--primary-pale);border:1.5px solid #E0E0E0;border-radius:var(--radius-sm);padding:14px 16px;margin-top:4px">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:14px;color:var(--text)">
+            <input type="checkbox" id="autodebit-agree" style="margin-top:3px;accent-color:var(--primary);width:16px;height:16px;flex-shrink:0">
+            <span>[필수] 대출 상환금이 지정 계좌에서 매월 자동이체 방식으로 납부됨에 동의합니다.</span>
+          </label>
+          <div style="margin-top:10px;padding:10px 12px;background:#fff;border-radius:var(--radius-sm);border:1px solid #E0E0E0;font-size:12px;color:var(--text-muted);line-height:1.7">
+            💡 <strong style="color:var(--primary)">현재 통장 압류 등 금융 제약이 있으시더라도 신청하실 수 있습니다.</strong><br>
+            입금·상환 방법은 담당자가 상황에 맞게 안내해 드립니다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAT 05 금융 생활 -->
+  <div class="card" style="border-radius:14px;overflow:hidden">
+    <div class="cat-header" style="background:linear-gradient(135deg,#2A2A2A,#444444)"><span class="cat-num">05</span><div><div class="cat-title-text">금융 생활</div></div></div>
+    <div class="card-body">
+      <p class="section-title">05-1 · 평소 금융 생활</p>
+      <div class="form-row">
+        <label class="form-label">최근 1년 공과금 등 연체 여부</label>
+        <div class="radio-group">
+          <label class="radio-btn" onclick="toggleRadio(this,'util-late')"><input type="radio" name="util-late"><div class="radio-dot"></div>없음</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'util-late')"><input type="radio" name="util-late"><div class="radio-dot"></div>1~2회</label>
+          <label class="radio-btn" onclick="toggleRadio(this,'util-late')"><input type="radio" name="util-late"><div class="radio-dot"></div>3회+</label>
+        </div>
+      </div>
+      <p class="section-title">05-2 · 금융 문제 현황</p>
+      <div class="form-row">
+        <label class="form-label">대출이 거절되었을 때, 다른 대안은 무엇이었습니까? <span class="opt">(복수 선택 가능)</span></label>
+        <div class="check-group">
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>지인/친척 도움</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>대부업/사금융 이용</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>타 사업대출</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>현금서비스 이용</label>
+          <label class="check-btn" onclick="toggleCheck(this);toggleEtcInput(this,'etc-alt')"><div class="check-mark"></div>기타</label>
+        </div>
+        <div id="etc-alt" style="display:none;margin-top:8px"><input class="form-input" type="text" placeholder="구체적으로 입력해 주세요" style="max-width:400px"></div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">현재 겪고 있는 금융 문제는 무엇입니까? <span class="opt">(복수 선택 가능)</span></label>
+        <div class="check-group">
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>고금리(10% 이상)</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>다중부채 부담</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>세금·공과금/카드대금 등 납부 부담</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>불법사금융 이용</label>
+          <label class="check-btn" onclick="toggleCheck(this);toggleEtcInput(this,'etc-fin')"><div class="check-mark"></div>기타</label>
+        </div>
+        <div id="etc-fin" style="display:none;margin-top:8px"><input class="form-input" type="text" placeholder="구체적으로 입력해 주세요" style="max-width:400px"></div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">최근 3개월 내 아래와 같은 어려움을 겪으셨습니까? <span class="opt">(복수 선택 가능)</span></label>
+        <div class="check-group">
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>주거비(월세 등)를 내지 못함</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>세금·공과금(관리비, 수도비, 가스비 등)을 내지 못함</label>
+          <label class="check-btn" onclick="toggleCheck(this)"><div class="check-mark"></div>대부업체 및 불법사금융 대출 시도</label>
+          <label class="check-btn" onclick="toggleCheck(this);toggleEtcInput(this,'etc-diff')"><div class="check-mark"></div>기타</label>
+        </div>
+        <div id="etc-diff" style="display:none;margin-top:8px"><input class="form-input" type="text" placeholder="구체적으로 입력해 주세요" style="max-width:400px"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 제출 -->
+  <div class="card">
+    <div class="card-body" style="text-align:center;padding:28px">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:14px;text-align:left;margin-bottom:20px">
+        <input type="checkbox" id="final-consent" style="margin-top:3px;accent-color:var(--primary);width:16px;height:16px">
+        <span>위 내용이 모두 사실임을 확인하며, 허위 기재 시 대출이 거절될 수 있음에 동의합니다. 추가 서류 제출 및 비대면 상담에 응할 것에 동의합니다.</span>
+      </label>
+      <button class="btn btn-primary" onclick="submitApp()" style="max-width:400px;margin:0 auto">✉️ 신청서 최종 제출</button>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:12px">담당자가 확인 후 연락드립니다.</p>
+    </div>
+  </div>
+  <div class="btn-group"><button class="btn-back" onclick="goStep(1)">← 이전</button></div>
+</div>
+
+<!-- 완료 -->
+<div class="page" id="page3">
+  <div class="card">
+    <div class="complete-screen">
+      <div class="complete-icon">🌸</div>
+      <h2>신청서가 접수되었습니다</h2>
+      <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:20px 24px;margin:20px auto;max-width:400px;text-align:left;font-size:14px;line-height:2">
+        <div>접수 번호 &nbsp;<strong id="receipt-display" style="color:var(--primary)">—</strong></div>
+        <div>접수 일시 &nbsp;<span id="receipt-date" style="color:var(--text-muted)">—</span></div>
+        <div>신청자 &nbsp;&nbsp;&nbsp;&nbsp;<span id="receipt-name" style="color:var(--text-muted)">—</span></div>
+        <div>대출 용도 &nbsp;<span id="receipt-purpose" style="color:var(--text-muted)">—</span></div>
+        <div>희망 금액 &nbsp;<span id="receipt-amount" style="color:var(--text-muted)">—</span></div>
+      </div>
+      <p style="font-size:14px;color:var(--text-muted);line-height:1.8">
+        담당자가 확인 후 연락드립니다.<br>
+        작성해주셔서 감사합니다.<br><br>
+        <span style="color:var(--warning);font-size:13px">📅 추가 서류 제출은 필요 시 담당자가 안내해 드립니다</span><br><br>
+        <span style="font-size:12px;color:var(--text-muted)">함께만드는세상 · 카카오뱅크 · 신용회복위원회</span>
+      </p>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:28px">
+        <button id="print-btn" class="btn btn-primary" style="max-width:280px" onclick="printReceipt()">🖨️ 접수증 PDF 저장</button>
+        <button class="btn-back" onclick="location.reload()">처음으로</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 하단 고정 임시저장 바 -->
+<div id="save-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#fff;border-top:1px solid var(--border);box-shadow:0 -2px 12px rgba(0,0,0,.08);padding:10px 20px">
+  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <span id="save-status-text" style="font-size:12px;color:var(--text-muted)">자동 저장 중</span>
+    <button id="manual-save-btn" onclick="manualSave()" style="background:var(--primary);color:#fff;border:none;padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap">💾 임시저장</button>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ── 카카오 우편번호 서비스 (팝업 방식) ──
+function openPostcode() {
+  new kakao.Postcode({
+    oncomplete: function(data) {
+      var roadAddr = data.roadAddress;
+      var extraRoadAddr = '';
+
+      if(data.bname !== '' && /[동로가]$/.test(data.bname)){
+        extraRoadAddr += data.bname;
+      }
+      if(data.buildingName !== '' && data.apartment === 'Y'){
+        extraRoadAddr += (extraRoadAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+      }
+      if(extraRoadAddr !== ''){
+        extraRoadAddr = ' (' + extraRoadAddr + ')';
+      }
+
+      document.getElementById('addr-zipcode').value = data.zonecode;
+      document.getElementById('addr-road').value = roadAddr + extraRoadAddr;
+      document.getElementById('addr-jibun').value = data.jibunAddress || data.autoJibunAddress || '';
+      document.getElementById('addr-detail').value = '';
+      document.getElementById('addr-detail').focus();
+    }
+  }).open();
+}
+
+// ── 페이지 전환 ──
+function goStep(step) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page' + step).classList.add('active');
+  document.querySelectorAll('.step-item').forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    if (i < step) el.classList.add('done');
+    if (i === step) el.classList.add('active');
+  });
+  document.querySelectorAll('.step-item.done .step-num').forEach(el => { el.textContent = '✓'; });
+  const bar = document.getElementById('survey-progress-bar');
+  if (bar) bar.style.display = (step === 2) ? 'block' : 'none';
+  // 임시저장 바: 완료 화면(3)에서만 숨김
+  const saveBar = document.getElementById('save-bar');
+  if (saveBar) saveBar.style.display = (step === 3) ? 'none' : 'block';
+  if (step === 2) setTimeout(updateSurveyProgress, 100);
+  if (step === 2) setTimeout(loadTrackToStep2, 200);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── 자가진단 ──
+const eligState = {};
+function eligCheck(label, qId, result) {
+  document.querySelectorAll('.radio-btn').forEach(l => {
+    if (l.querySelector('input[name="'+qId+'"]')) l.classList.remove('selected');
+  });
+  label.classList.add('selected');
+
+  const stopEl = document.getElementById(qId + '-stop');
+  if (result === 'fail') {
+    eligState[qId] = false;
+    if (stopEl) stopEl.style.display = 'block';
+  } else if (result === 'pass') {
+    eligState[qId] = true;
+    if (stopEl) stopEl.style.display = 'none';
+  } else if (result === 'sub') {
+    eligState[qId] = null; // pending sub
+  }
+  checkEligAll();
+}
+function showSubQ(id) { document.getElementById(id).style.display = 'block'; }
+function hideSubQ(id) { document.getElementById(id).style.display = 'none'; }
+
+function checkEligAll() {
+  const mainQs = ['eq1','eq2','eq3','eq4','eq6','eq7'];
+  let allPass = mainQs.every(q => eligState[q] === true);
+  if (eligState['eq5'] === true) { /* pass */ }
+  else if (eligState['eq5'] === null && eligState['eq5sub'] === true) { /* sub pass */ }
+  else if (eligState['eq5'] === null && eligState['eq5sub'] === false) { allPass = false; }
+  else if (eligState['eq5'] === undefined) { allPass = false; }
+
+  // 대출 희망 용도 선택 여부 확인
+  const purposeSelected = document.querySelector('input[name="elig-purpose"]:checked') ||
+    document.querySelector('.radio-btn.selected input[name="elig-purpose"]');
+  const hasPurpose = !!purposeSelected;
+
+  const passMsg = document.getElementById('elig-pass');
+  const btn = document.getElementById('elig-next-btn');
+  if (allPass) {
+    passMsg.style.display = 'block';
+  } else {
+    passMsg.style.display = 'none';
+  }
+  if (allPass && hasPurpose) {
+    btn.disabled = false; btn.style.opacity = '1';
+  } else {
+    btn.disabled = true; btn.style.opacity = '.5';
+  }
+}
+
+// ── 공용 ──
+function selectCarrier(btn) { document.querySelectorAll('.carrier-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }
+function toggleRadio(label, name) {
+  document.querySelectorAll('.radio-btn').forEach(l => {
+    if (l.querySelector('input[name="'+name+'"]')) {
+      l.classList.remove('selected');
+      const inp = l.querySelector('input[type="radio"]');
+      if (inp) inp.checked = false;
+    }
+  });
+  label.classList.add('selected');
+  const inp = label.querySelector('input[type="radio"]');
+  if (inp) inp.checked = true;
+}
+function toggleCheck(label) { label.classList.toggle('selected'); }
+
+// ── 기타 직접입력 토글 ──
+function toggleEtcInput(label, inputId) {
+  const wrap = document.getElementById(inputId);
+  if (!wrap) return;
+  wrap.style.display = label.classList.contains('selected') ? 'block' : 'none';
+}
+function toggleConditional(id, show) { const el = document.getElementById(id); if (el) el.classList.toggle('show', show); }
+
+function toggleGovSupport(label, isNone) {
+  if (isNone) {
+    label.closest('.check-group').querySelectorAll('.check-btn').forEach(l => { if (l !== label) l.classList.remove('selected'); });
+    label.classList.add('selected');
+    document.getElementById('gov-total-wrap').style.display = 'none'; return;
+  }
+  label.closest('.check-group').querySelectorAll('.check-btn').forEach(l => { if (l.textContent.trim() === '해당없음') l.classList.remove('selected'); });
+  label.classList.toggle('selected');
+  document.getElementById('gov-total-wrap').style.display = label.closest('.check-group').querySelector('.check-btn.selected:not(:last-child)') ? 'block' : 'none';
+}
+function syncGovIncome() { const v = parseInt(document.getElementById('gov-total-amount')?.value || 0); const el = document.getElementById('inc-gov'); if (el) el.value = v || ''; updateCalc(); }
+
+// ── OTP ──
+let timerInterval;
+function sendOTP() { document.getElementById('otp-row').style.display = 'block'; startTimer(180); alert('인증번호 발송 (데모: 123456)'); }
+function startTimer(s) { clearInterval(timerInterval); const d = document.getElementById('timer-display'); timerInterval = setInterval(() => { const m = Math.floor(s/60), sec = s%60; d.textContent = `남은 시간: ${m}:${sec.toString().padStart(2,'0')}`; if (--s < 0) { clearInterval(timerInterval); d.textContent = '만료'; d.style.color='var(--accent)'; } }, 1000); }
+function verifyOTP() { if (document.getElementById('auth-otp').value === '123456') { clearInterval(timerInterval); document.getElementById('timer-display').textContent = '✓ 인증 완료'; document.getElementById('timer-display').style.color = 'var(--success)'; } else { alert('올바르지 않습니다 (데모: 123456)'); } }
+
+// ── 대환 희망 요약 + 트랙 연동 (04-1) ──
+function loadTrackToStep2() {
+  // 자격확인에서 선택한 트랙 찾기 (radio-btn.selected 또는 checked input)
+  let purposeVal = '';
+  document.querySelectorAll('input[name="elig-purpose"]').forEach(inp => {
+    if (inp.closest('.radio-btn')?.classList.contains('selected')) purposeVal = inp.value;
+  });
+  // fallback: checked 상태로도 확인
+  if (!purposeVal) {
+    const checked = document.querySelector('input[name="elig-purpose"]:checked');
+    if (checked) purposeVal = checked.value;
+  }
+
+  const trackLabel = document.getElementById('selected-track-label');
+  const maxLabel = document.getElementById('loan-max-label');
+  const refinWrap = document.getElementById('refin-summary');
+  const livingWrap = document.getElementById('purpose-living-detail');
+
+  if (!purposeVal) { trackLabel.textContent = '—'; refinWrap.style.display = 'none'; livingWrap.style.display = 'none'; return; }
+
+  if (purposeVal === 'refinance') {
+    trackLabel.textContent = '🔄 고금리 대환대출 (최대 500만원)';
+    maxLabel.textContent = '만원 (최대 500만원)';
+    livingWrap.style.display = 'none';
+  } else {
+    trackLabel.textContent = '💰 생계비 대출 (최대 300만원)';
+    maxLabel.textContent = '만원 (최대 300만원)';
+    refinWrap.style.display = 'none';
+    livingWrap.style.display = 'block';
+  }
+}
+
+// ── 부채 테이블 ──
+function removeRow(btn) { const r = btn.closest('tr'), t = r.closest('tbody'); if (t.querySelectorAll('tr').length > 1) { r.remove(); syncDebtTotal(); } }
+function addDebtRow() {
+  const tbody = document.getElementById('all-debt-tbody'); if (!tbody) return;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><select class="form-select" style="min-width:130px;font-size:12px;padding:6px 4px"><option value="">유형 선택</option><optgroup label="금융회사"><option>은행</option><option>저축은행</option><option>카드사(카드론)</option><option>캐피탈</option><option>보험사</option></optgroup><optgroup label="정책/공공"><option>정책서민금융(햇살론 등)</option><option>학자금대출</option><option>서민금융진흥원</option><option>신용회복위원회</option></optgroup><optgroup label="기타"><option>대부업체</option><option>개인차용(가족·지인)</option><option>기타</option></optgroup></select></td>
+    <td><select class="form-select" style="min-width:160px;font-size:12px;padding:6px 4px"><option value="">선택</option><option>일반신용대출</option><option>주택담보대출</option><option>정책서민금융 (햇살론/사잇돌/디딤돌/새희망홀씨 등)</option><option>카드론</option><option>차량구입 대출</option><option>기타</option></select></td>
+    <td><input class="form-input" type="text" placeholder="기관명" style="min-width:80px"></td>
+    <td><div style="display:flex;align-items:center;gap:3px"><input class="form-input num-limit" type="number" placeholder="0" oninput="validateNumLimit30k(this)" style="min-width:70px;text-align:right"><span style="font-size:11px;color:var(--text-muted);white-space:nowrap">만 원</span></div></td>
+    <td><div style="display:flex;align-items:center;gap:3px"><input class="form-input num-limit" type="number" placeholder="0" oninput="validateNumLimit30k(this)" style="min-width:70px;text-align:right"><span style="font-size:11px;color:var(--text-muted);white-space:nowrap">만 원</span></div></td>
+    <td><div style="display:flex;align-items:center;gap:3px"><input class="form-input num-limit" type="number" placeholder="0" oninput="validateNumLimit(this);syncDebtTotal()" style="min-width:70px;text-align:right"><span style="font-size:11px;color:var(--text-muted);white-space:nowrap">만 원</span></div></td>
+    <td><select class="form-select" style="min-width:100px;font-size:12px;padding:6px 4px"><option value="">선택</option><option>5% 미만</option><option>5~10%</option><option>10~15%</option><option>15~20%</option><option>20% 이상</option></select></td>
+    <td><input class="form-input" type="month" style="min-width:118px;font-size:12px"></td>
+    <td><input class="form-input" type="month" style="min-width:118px;font-size:12px"></td>
+    <td><button onclick="removeRow(this)" style="background:none;border:none;color:#CC4444;cursor:pointer;font-size:18px;padding:0 4px">×</button></td>`;
+  tbody.appendChild(tr);
+}
+// ── 실명인증 ──
+function verifyRealName() {
+  const name = document.getElementById('real-name').value.trim();
+  const ssnFront = document.getElementById('ssn-front').value.trim();
+  const ssnBack = document.getElementById('ssn-back').value.trim();
+  const resultEl = document.getElementById('realname-result');
+  if (!name || ssnFront.length !== 6 || ssnBack.length !== 7) {
+    resultEl.innerHTML = '<div style="background:#FFF0F0;border:1.5px solid #FFCDD2;border-radius:8px;padding:12px 16px;font-size:13px;color:#C62828;font-weight:600">⚠️ 성명과 주민등록번호를 정확히 입력해 주세요.</div>';
+    resultEl.style.display = 'block'; return;
+  }
+  resultEl.innerHTML = '<div style="background:var(--success-light);border:1.5px solid #A8D5B8;border-radius:8px;padding:12px 16px;font-size:13px;color:var(--success);font-weight:600">✅ 실명확인이 완료되었습니다.</div>';
+  resultEl.style.display = 'block';
+  const phoneCard = document.getElementById('phone-auth-card');
+  if (phoneCard) { phoneCard.style.opacity = '1'; phoneCard.style.pointerEvents = 'auto'; }
+  const birthYear = parseInt(ssnFront.substring(0, 2));
+  const genderCode = parseInt(ssnBack.charAt(0));
+  const fullYear = (genderCode <= 2) ? 1900 + birthYear : 2000 + birthYear;
+  document.getElementById('auth-name-display').textContent = name;
+  document.getElementById('auth-birth-display').textContent = fullYear + '.' + ssnFront.substring(2, 4) + '.' + ssnFront.substring(4, 6);
+  document.getElementById('auth-gender-display').textContent = (genderCode % 2 === 1) ? '남성' : '여성';
+}
+
+// ── 숫자 입력값 제한 (max 5000) ──
+function validateNumLimit(input) {
+  input.value = input.value.replace(/[^0-9]/g, '');
+  if (parseInt(input.value) > 5000) { input.value = ''; showNumWarning(); }
+}
+function showNumWarning() {
+  let w = document.getElementById('global-num-warning');
+  if (!w) {
+    w = document.createElement('div'); w.id = 'global-num-warning';
+    w.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#FFF0F0;border:2px solid #FFCDD2;border-radius:10px;padding:14px 24px;font-size:13px;color:#C62828;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.15);max-width:500px;text-align:center;transition:opacity .3s';
+    w.textContent = '⚠️ 5000 이하의 숫자만 입력 가능합니다. 단위는 만 원입니다. (예: 250만원 → 250 입력)';
+    document.body.appendChild(w);
+  }
+  w.style.display = 'block'; w.style.opacity = '1';
+  clearTimeout(w._timer);
+  w._timer = setTimeout(() => { w.style.opacity = '0'; setTimeout(() => { w.style.display = 'none'; }, 300); }, 4000);
+}
+
+// ── 숫자 입력값 제한 (max 30000, 약정금액/현재잔액용) ──
+function validateNumLimit30k(input) {
+  input.value = input.value.replace(/[^0-9]/g, '');
+  if (parseInt(input.value) > 30000) { input.value = ''; showNumWarning(); }
+}
+
+// ── 기타대출 행 추가 ──
+function addNonbankRow() {
+  const tbody = document.getElementById('nonbank-tbody'); if (!tbody) return;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><select class="form-select" style="width:100%;font-size:12px;padding:6px 4px"><option value="">선택</option><option>대부업체</option><option>학자금(장학재단)</option><option>서민금융진흥원</option><option>신용회복위원회</option><option>공단·지역농협 등</option><option>가족 및 지인</option><option>기타</option></select></td>
+    <td><input class="form-input" type="text" placeholder="기관명" style="width:100%"></td>
+    <td><div style="display:flex;align-items:center;gap:3px"><input class="form-input num-limit" type="number" placeholder="0" oninput="validateNumLimit30k(this)" style="width:100%;text-align:right"><span style="font-size:11px;color:var(--text-muted);white-space:nowrap">만 원</span></div></td>
+    <td><div style="display:flex;align-items:center;gap:3px"><input class="form-input num-limit" type="number" placeholder="0" oninput="validateNumLimit30k(this)" style="width:100%;text-align:right"><span style="font-size:11px;color:var(--text-muted);white-space:nowrap">만 원</span></div></td>
+    <td><div style="display:flex;align-items:center;gap:3px"><input class="form-input num-limit" type="number" placeholder="0" oninput="validateNumLimit(this);syncDebtTotal()" style="width:100%;text-align:right"><span style="font-size:11px;color:var(--text-muted);white-space:nowrap">만 원</span></div></td>
+    <td><select class="form-select" style="width:100%;font-size:12px;padding:6px 4px"><option value="">선택</option><option>무이자</option><option>5% 미만</option><option>5~10%</option><option>10~15%</option><option>15~20%</option><option>20% 이상</option></select></td>
+    <td><input class="form-input" type="month" style="min-width:110px;font-size:12px"></td>
+    <td><input class="form-input" type="month" style="min-width:110px;font-size:12px"></td>
+    <td><button onclick="removeRow(this)" style="background:none;border:none;color:#CC4444;cursor:pointer;font-size:18px;padding:0 4px">×</button></td>`;
+  tbody.appendChild(tr);
+}
+
+function syncDebtTotal() {
+  let total = 0;
+  // 02-1 통합 명세 테이블
+  document.querySelectorAll('#all-debt-tbody tr').forEach(row => {
+    const inputs = row.querySelectorAll('input[type="number"]');
+    if (inputs[2]) total += parseInt(inputs[2].value || 0); // 약정[0], 잔액[1], 월상환[2]
+  });
+  const disp = document.getElementById('debt-monthly-display');
+  if (disp) disp.textContent = total + ' 만 원';
+  const el = document.getElementById('exp-loan'); if (el) { el.value = total || ''; updateCalc(); }
+}
+
+// ── 거주비 ──
+function updateResCost(type) {
+  const w = document.getElementById('res-cost-wrap'); if (!w) return;
+  if (['전세','임대','월세'].includes(type)) {
+    const l2 = type==='전세'?'월 전세이자·관리비':type==='임대'?'월 임대료':'월 세';
+    w.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">💰 ${type} 비용</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px">보증금</label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" style="flex:1;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div><div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px">${l2}</label><div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" style="flex:1;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원</span></div></div></div>`;
+    w.style.display = 'block';
+  } else if (type==='고시원') { w.innerHTML = `<div style="display:flex;align-items:center;gap:6px"><input class="form-input" type="number" placeholder="0" style="width:120px;text-align:right"><span style="font-size:13px;color:var(--text-muted)">만원/월</span></div>`; w.style.display = 'block';
+  } else { w.style.display = 'none'; w.innerHTML = ''; }
+}
+
+// ── 소득·지출 계산 ──
+function updateCalc() {
+  const w = parseInt(document.getElementById('inc-work')?.value||0), b = parseInt(document.getElementById('inc-biz')?.value||0), g = parseInt(document.getElementById('inc-gov')?.value||0), e = parseInt(document.getElementById('inc-etc')?.value||0);
+  const inc = w+b+g+e;
+  document.getElementById('income-total-display').textContent = inc ? inc+' 만원':'— 만원';
+  const expIds = ['exp-rent','exp-food','exp-transit','exp-comm','exp-medical','exp-insure','exp-loan','exp-saving','exp-etc'];
+  const exp = expIds.reduce((s,id) => s + parseInt(document.getElementById(id)?.value||0), 0);
+  const net = inc - exp;
+  document.getElementById('calc-income').textContent = inc ? inc+' 만원':'— 만원';
+  document.getElementById('calc-expense').textContent = exp ? '-'+exp+' 만원':'— 만원';
+  const netEl = document.getElementById('calc-net');
+  if (inc) { netEl.textContent = net+' 만원'; netEl.style.color = net>=0?'#7FE0A8':'#FF8A80'; } else { netEl.textContent = '— 만원'; }
+}
+
+// ── 파일 첨부 표시 ──
+function showFileName(input, displayId) {
+  const display = document.getElementById(displayId);
+  if (!display) return;
+  if (input.files.length > 0) {
+    const names = Array.from(input.files).map(f => f.name).join(', ');
+    display.textContent = '📄 ' + names;
+    display.style.display = 'block';
+  } else { display.style.display = 'none'; }
+}
+
+// ── FRDI-24 ──
+const hexacoItems = [
+  "지인 경조사비와 대출 상환일이 겹치면, 체면이 깎이더라도 상환을 우선한다.",
+  "돈 문제 때문에 수면이나 일상에 영향을 받은 적이 있다.",
+  "재정 상황을 생각하면 불안하거나 압박감을 느낀다.",
+  "경제적 어려움이 와도 주변에 도움을 요청하는 것이 어렵다.",
+  "금전 문제를 혼자 해결해야 한다는 부담을 크게 느낀다.",
+  "주변 사람과 돈 문제로 갈등이 생기면 크게 마음이 상한다.",
+  "돈과 관련된 문제를 회피하고 싶다는 생각이 든다.",
+  "복잡한 금융 정보를 접하면 이해하기 어려워 스트레스를 받는다.",
+  "갚아야 할 돈이 있으면 우선적으로 상환하려 한다.",
+  "금전적으로 어려워도 약속한 상환을 지키려고 노력한다.",
+  "급한 지출이 생기면 감정적으로 반응하기보다 차분하게 대응책을 찾는 편이다.",
+  "상황이 어려워지면 금융기관 또는 주변과 적극적으로 협의하려 한다.",
+  "대출 상환이 어려워질 것 같으면, 연체 전에 먼저 연락하는 편이다.",
+  "정기적으로 수입과 지출을 기록하거나 관리한다.",
+  "충동적으로 소비하는 경우가 많다.",
+  "금융상품을 선택할 때 조건을 꼼꼼히 비교한다.",
+  "돈을 빌렸다면 반드시 갚아야 한다고 생각한다.",
+  "한두 달 연체가 발생해도 정상화 방법을 먼저 찾는 편이다.",
+  "도움을 받는 것은 부끄러운 일이 아니라고 생각한다.",
+  "재정 문제 해결에 타인과 협력하는 것이 중요하다고 생각한다.",
+  "급해도 불법 사금융보다 정식 지원 제도가 낫다고 생각한다.",
+  "빚이 있는 상태에서 코인·주식 투자 기회가 와도 상환이 먼저라고 생각한다.",
+  "금융지식은 삶에서 중요한 역량이라고 생각한다.",
+  "새로운 금융 제도나 지원 프로그램을 적극적으로 알아보려 한다.",
+];
+function renderHexaco() {
+  const c = document.getElementById('hexaco-questions'); if (!c) return;
+  const L = ['전혀\n아니다','아니다','보통','그렇다','매우\n그렇다'];
+  c.innerHTML = hexacoItems.map((q,i) => `<div class="likert-q"><div class="likert-text">Q${i+1}. ${q}</div><div class="likert-scale"><span class="likert-label">${L[0]}</span><div class="likert-options">${[1,2,3,4,5].map(v=>`<button class="likert-opt" onclick="this.closest('.likert-options').querySelectorAll('.likert-opt').forEach(o=>o.classList.remove('selected'));this.classList.add('selected')">${v}</button>`).join('')}</div><span class="likert-label">${L[4]}</span></div></div>`).join('');
+}
+
+// ── 진행 트래킹 ──
+function updateSurveyProgress() {
+  const p = document.getElementById('page2'); if (!p || !p.classList.contains('active')) return;
+  const all = new Set(); const done = new Set();
+  p.querySelectorAll('input[type="radio"][name]').forEach(i => all.add('r:'+i.name));
+  p.querySelectorAll('.check-group').forEach((_,i) => all.add('c:'+i));
+  p.querySelectorAll('textarea').forEach((_,i) => all.add('t:'+i));
+  p.querySelectorAll('input[id^="exp-"]').forEach(i => all.add('e:'+i.id));
+  p.querySelectorAll('.radio-btn.selected').forEach(b => { const i=b.querySelector('input[type="radio"]'); if(i&&i.name) done.add('r:'+i.name); });
+  p.querySelectorAll('.check-group').forEach((g,i) => { if(g.querySelector('.check-btn.selected')) done.add('c:'+i); });
+  p.querySelectorAll('textarea').forEach((t,i) => { if(t.value.trim().length>3) done.add('t:'+i); });
+  p.querySelectorAll('input[id^="exp-"]').forEach(i => { if(i.value) done.add('e:'+i.id); });
+  const a=[...all].filter(k=>done.has(k)).length, tot=all.size, pct=tot?Math.round(a/tot*100):0;
+  document.getElementById('prog-current').textContent=a; document.getElementById('prog-total').textContent=tot;
+  document.getElementById('prog-fill').style.width=pct+'%'; document.getElementById('prog-pct').textContent=pct+'%';
+}
+
+// ── 동의 사항 검증 ──
+function checkAllConsents() {
+  const c1 = document.getElementById('consent1').checked;
+  const c2 = document.getElementById('consent2').checked;
+  const c3 = document.getElementById('consent3').checked;
+  const all = c1 && c2 && c3;
+  // 전체 동의 체크박스 연동
+  document.getElementById('consent-all').checked = all;
+  // 경고 표시
+  document.getElementById('consent-warning').style.display = all ? 'none' : 'block';
+  // 다음 버튼 활성화
+  const btn = document.getElementById('consent-next-btn');
+  if (all) { btn.disabled = false; btn.style.opacity = '1'; }
+  else { btn.disabled = true; btn.style.opacity = '.5'; }
+}
+function toggleConsentAll() {
+  const allChecked = document.getElementById('consent-all').checked;
+  document.getElementById('consent1').checked = allChecked;
+  document.getElementById('consent2').checked = allChecked;
+  document.getElementById('consent3').checked = allChecked;
+  checkAllConsents();
+}
+function toggleConsentDetail(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const btn = el.previousElementSibling.querySelector('button');
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    if (btn) btn.textContent = '접기';
+  } else {
+    el.style.display = 'none';
+    if (btn) btn.textContent = '내용 보기';
+  }
+}
+function goStepWithConsent() {
+  const all = document.getElementById('consent1').checked && document.getElementById('consent2').checked && document.getElementById('consent3').checked;
+  if (!all) {
+    document.getElementById('consent-warning').style.display = 'block';
+    return;
+  }
+  document.getElementById('consent-warning').style.display = 'none';
+  goStep(2);
+}
+
+// ── 부채 없음 토글 ──
+function toggleNoDebt() {
+  const checked = document.getElementById('no-debt-check').checked;
+  const area = document.getElementById('debt-table-area');
+  if (checked) {
+    area.style.display = 'none';
+  } else {
+    area.style.display = 'block';
+  }
+}
+
+// ── 중간저장 (localStorage) ──
+const SAVE_KEY = 'dasibom_draft_v4';
+
+function autoSave() {
+  try {
+    const data = {};
+
+    // === page0: 자격요건 ===
+    ['eq1','eq2','eq3','eq4','eq5','eq5sub','eq6','eq7'].forEach(name => {
+      const sel = document.querySelector(`.radio-btn.selected input[name="${name}"]`);
+      if (sel) data['elig_' + name] = sel.closest('.radio-btn').textContent.trim();
+    });
+    // 대출 용도
+    document.querySelectorAll('input[name="elig-purpose"]').forEach(inp => {
+      if (inp.closest('.radio-btn')?.classList.contains('selected')) data['elig_purpose'] = inp.value;
+    });
+
+    // === page1: 동의 ===
+    data['consent1'] = document.getElementById('consent1')?.checked || false;
+    data['consent2'] = document.getElementById('consent2')?.checked || false;
+    data['consent3'] = document.getElementById('consent3')?.checked || false;
+
+    // === page2: 신청서 전체 ===
+    // 모든 input (id가 있는 것)
+    document.querySelectorAll('#page2 input[type="text"], #page2 input[type="number"], #page2 input[type="tel"], #page2 input[type="email"], #page2 input[type="month"], #page2 input[type="password"]').forEach(el => {
+      if (el.id) data['input_' + el.id] = el.value;
+    });
+    // id 없는 input도 name이나 placeholder 기반으로 저장
+    document.querySelectorAll('#page2 input[type="text"]:not([id]), #page2 input[type="number"]:not([id])').forEach((el, i) => {
+      data['noinput_' + i] = el.value;
+    });
+    // textarea
+    document.querySelectorAll('#page2 textarea').forEach((el, i) => {
+      var val = el.value.trim();
+      // placeholder 예시와 동일하거나 예)로 시작하면 빈값 처리
+      if (val === el.placeholder.trim() || val.startsWith('예)') || val.startsWith('예 )')) {
+        data['textarea_' + i] = '';
+      } else {
+        data['textarea_' + i] = el.value;
+      }
+    });
+    // radio 선택 (page2)
+    document.querySelectorAll('#page2 .radio-btn.selected input[type="radio"]').forEach(el => {
+      if (el.name) data['radio_' + el.name] = el.closest('.radio-btn').textContent.trim();
+    });
+    // check 선택 (page2)
+    document.querySelectorAll('#page2 .check-group').forEach((g, gi) => {
+      const selected = [];
+      g.querySelectorAll('.check-btn.selected').forEach(b => selected.push(b.textContent.trim()));
+      data['check_' + gi] = selected;
+    });
+    // 부채 없음
+    data['no_debt'] = document.getElementById('no-debt-check')?.checked || false;
+    // 자동이체 동의
+    data['autodebit'] = document.getElementById('autodebit-agree')?.checked || false;
+    // 최종동의
+    data['final_consent'] = document.getElementById('final-consent')?.checked || false;
+    // select (page2)
+    document.querySelectorAll('#page2 select').forEach((el, i) => {
+      data['select_' + i] = el.selectedIndex;
+    });
+    // FRDI-24 리커트
+    document.querySelectorAll('#hexaco-questions .likert-options').forEach((opts, i) => {
+      const sel = opts.querySelector('.likert-opt.selected');
+      if (sel) data['likert_' + i] = sel.textContent.trim();
+    });
+    // 현재 스텝
+    const activePage = document.querySelector('.page.active');
+    if (activePage) data['_step'] = parseInt(activePage.id.replace('page',''));
+
+    data['_saved_at'] = new Date().toISOString();
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    updateSaveStatus();
+  } catch(e) { /* 저장 실패 무시 */ }
+}
+
+function autoLoad() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data._saved_at) return false;
+
+    // === page0: 자격요건 복원 ===
+    ['eq1','eq2','eq3','eq4','eq5','eq5sub','eq6','eq7'].forEach(name => {
+      if (!data['elig_' + name]) return;
+      const savedText = data['elig_' + name];
+      document.querySelectorAll(`input[name="${name}"]`).forEach(inp => {
+        const btn = inp.closest('.radio-btn');
+        if (btn && btn.textContent.trim() === savedText) {
+          btn.classList.add('selected');
+          inp.checked = true;
+          // eligState도 복원
+          const stopEl = document.getElementById(name + '-stop');
+          if (savedText.includes('아니오') || savedText.includes('있음')) {
+            eligState[name] = false;
+            if (stopEl) stopEl.style.display = 'block';
+          } else if (savedText.includes('진행 중')) {
+            eligState[name] = null;
+            const sub = document.getElementById(name + '-sub');
+            if (sub) sub.style.display = 'block';
+          } else {
+            eligState[name] = true;
+            if (stopEl) stopEl.style.display = 'none';
+          }
+        }
+      });
+    });
+    // 대출 용도
+    if (data['elig_purpose']) {
+      document.querySelectorAll('input[name="elig-purpose"]').forEach(inp => {
+        if (inp.value === data['elig_purpose']) {
+          const btn = inp.closest('.radio-btn');
+          if (btn) { btn.classList.add('selected'); inp.checked = true; }
+        }
+      });
+    }
+    checkEligAll();
+
+    // === page1: 동의 복원 ===
+    if (data['consent1']) document.getElementById('consent1').checked = true;
+    if (data['consent2']) document.getElementById('consent2').checked = true;
+    if (data['consent3']) document.getElementById('consent3').checked = true;
+    // 전체 동의 체크박스 연동
+    const allConsent = document.getElementById('consent1')?.checked && document.getElementById('consent2')?.checked && document.getElementById('consent3')?.checked;
+    if (document.getElementById('consent-all')) document.getElementById('consent-all').checked = allConsent;
+    checkAllConsents();
+
+    // === page2: 신청서 복원 ===
+    // input (id 있는 것) — 빈값은 복원 안 함
+    Object.keys(data).forEach(k => {
+      if (k.startsWith('input_')) {
+        const val = data[k];
+        if (!val && val !== 0) return; // 빈값 건너뛰기
+        const el = document.getElementById(k.replace('input_', ''));
+        if (el) {
+          if (el.readOnly && ['inc-gov','exp-loan'].includes(el.id)) { /* skip */ }
+          else el.value = val;
+        }
+      }
+    });
+    // id 없는 input — 빈값은 복원 안 함
+    document.querySelectorAll('#page2 input[type="text"]:not([id]), #page2 input[type="number"]:not([id])').forEach((el, i) => {
+      if (data['noinput_' + i] && data['noinput_' + i].length > 0) el.value = data['noinput_' + i];
+    });
+    // textarea — 빈값은 복원 안 함
+    document.querySelectorAll('#page2 textarea').forEach((el, i) => {
+      if (data['textarea_' + i] && data['textarea_' + i].trim().length > 0) el.value = data['textarea_' + i];
+    });
+    // select
+    document.querySelectorAll('#page2 select').forEach((el, i) => {
+      if (data['select_' + i] !== undefined) el.selectedIndex = data['select_' + i];
+    });
+    // radio (page2)
+    Object.keys(data).forEach(k => {
+      if (!k.startsWith('radio_')) return;
+      const name = k.replace('radio_', '');
+      const savedText = data[k];
+      document.querySelectorAll(`#page2 input[name="${name}"]`).forEach(inp => {
+        const btn = inp.closest('.radio-btn');
+        if (btn && btn.textContent.trim() === savedText) {
+          btn.classList.add('selected');
+          inp.checked = true;
+        }
+      });
+    });
+    // check (page2)
+    document.querySelectorAll('#page2 .check-group').forEach((g, gi) => {
+      if (!data['check_' + gi] || !data['check_' + gi].length) return;
+      const savedArr = data['check_' + gi];
+      g.querySelectorAll('.check-btn').forEach(btn => {
+        if (savedArr.includes(btn.textContent.trim())) btn.classList.add('selected');
+      });
+    });
+    // 부채 없음
+    if (data['no_debt']) {
+      document.getElementById('no-debt-check').checked = true;
+      toggleNoDebt();
+    }
+    // 자동이체
+    if (data['autodebit']) document.getElementById('autodebit-agree').checked = true;
+    // 최종동의
+    if (data['final_consent']) document.getElementById('final-consent').checked = true;
+    // 리커트
+    document.querySelectorAll('#hexaco-questions .likert-options').forEach((opts, i) => {
+      if (data['likert_' + i]) {
+        opts.querySelectorAll('.likert-opt').forEach(btn => {
+          if (btn.textContent.trim() === data['likert_' + i]) btn.classList.add('selected');
+        });
+      }
+    });
+
+    // 저장된 스텝으로 자동 이동
+    if (data['_step'] !== undefined && data['_step'] > 0) {
+      setTimeout(() => goStep(data['_step']), 100);
+    }
+
+    return true;
+  } catch(e) { return false; }
+}
+
+function clearDraft() {
+  localStorage.removeItem(SAVE_KEY);
+}
+
+function collectDebtRows() {
+  const rows = [];
+  document.querySelectorAll('#all-debt-tbody tr').forEach(tr => {
+    const selects = tr.querySelectorAll('select');
+    const textInputs = tr.querySelectorAll('input[type="text"]');
+    const numberInputs = tr.querySelectorAll('input[type="number"]');
+    const monthInputs = tr.querySelectorAll('input[type="month"]');
+
+    const orgName = (textInputs[0]?.value || '').trim();
+    const balanceRaw = (numberInputs[1]?.value || '').trim();
+    if (!orgName && !balanceRaw) return;
+
+    rows.push({
+      lender_type: selects[0]?.value || null,
+      product_type: selects[1]?.value || null,
+      org_name: orgName || null,
+      contract_amt: numberInputs[0]?.value ? parseInt(numberInputs[0].value, 10) : null,
+      balance_amt: numberInputs[1]?.value ? parseInt(numberInputs[1].value, 10) : null,
+      monthly_pay: numberInputs[2]?.value ? parseInt(numberInputs[2].value, 10) : null,
+      rate_band: selects[2]?.value || null,
+      start_month: monthInputs[0]?.value || null,
+      end_month: monthInputs[1]?.value || null
+    });
+  });
+  return rows;
+}
+
+function collectFrdiScores() {
+  const scores = [];
+  document.querySelectorAll('#hexaco-questions .likert-options').forEach(opts => {
+    const selected = opts.querySelector('.likert-opt.selected');
+    scores.push(selected ? parseInt(selected.textContent.trim(), 10) : null);
+  });
+  return scores;
+}
+
+function getRadioValue(name) {
+  const sel = document.querySelector(`.radio-btn.selected input[name="${name}"]`);
+  if (!sel) return '';
+  return sel.closest('.radio-btn').textContent.trim();
+}
+
+function getTextareaValue(el) {
+  if (!el) return '';
+  const val = el.value.trim();
+  if (!val) return '';
+  if (val === el.placeholder.trim()) return '';
+  if (val.startsWith('예)') || val.startsWith('예 )')) return '';
+  return el.value;
+}
+
+// ── 기관유형 한글 정규화 ──
+function mapLenderType(raw) {
+  if (!raw) return '';
+  if (raw.includes('저축은행'))                    return '저축은행';
+  if (raw.includes('카드'))                         return '카드론';
+  if (raw.includes('캐피탈'))                       return '캐피탈';
+  if (raw.includes('보험'))                         return '보험사';
+  if (raw.includes('대부'))                         return '대부업';
+  if (raw.includes('가족') || raw.includes('지인')) return '가족및지인';
+  if (raw.includes('은행'))                         return '은행';
+  if (raw.includes('정책'))                         return '정책서민금융';
+  if (raw.includes('학자금'))                       return '학자금';
+  if (raw.includes('서민금융'))                     return '서민금융';
+  if (raw.includes('신용회복'))                     return '신용회복';
+  return raw;
+}
+
+// ── 금리 범위 → 숫자 변환 ──
+function rateBandToNum(band) {
+  if (!band) return 0;
+  if (band.includes('미만'))   return 3;
+  if (band.includes('5~10'))  return 7;
+  if (band.includes('10~15')) return 12;
+  if (band.includes('15~20')) return 17;
+  if (band.includes('20'))    return 22;
+  return 0;
+}
+
+function collectPayload() {
+  function getIntValue(selector) {
+    const el = document.querySelector(selector);
+    if (!el) return null;
+    const v = (el.value || '').trim();
+    return v ? parseInt(v, 10) : null;
+  }
+
+  const page2 = document.getElementById('page2');
+  const textareas = page2 ? page2.querySelectorAll('textarea') : [];
+
+  const incomeTypeGroup = document.querySelectorAll('#page2 .check-group')[1];
+  const incomeType = incomeTypeGroup
+    ? Array.from(incomeTypeGroup.querySelectorAll('.check-btn.selected')).map(btn => btn.textContent.trim()).join(',')
+    : '';
+
+  let loanPurpose = '';
+  document.querySelectorAll('input[name="elig-purpose"]').forEach(inp => {
+    if (inp.closest('.radio-btn')?.classList.contains('selected')) loanPurpose = inp.value;
+  });
+  if (!loanPurpose) {
+    const checked = document.querySelector('input[name="elig-purpose"]:checked');
+    if (checked) loanPurpose = checked.value;
+  }
+
+  const incSustainRaw = getRadioValue('inc-sustain');
+  let 직장유지가능성 = '';
+  if (incSustainRaw.includes('유지'))                                        직장유지가능성 = '유지예정';
+  else if (incSustainRaw.includes('불확실'))                                 직장유지가능성 = '불확실';
+  else if (incSustainRaw.includes('이직') || incSustainRaw.includes('전환')) 직장유지가능성 = '이직·전환';
+
+  const incChangeRaw = getRadioValue('inc-change');
+  let 소득전망 = '';
+  if (incChangeRaw.includes('증가'))      소득전망 = incChangeRaw;
+  else if (incChangeRaw.includes('감소')) 소득전망 = incChangeRaw;
+  else if (직장유지가능성 === '유지예정') 소득전망 = '유지';
+
+  const debtAdjRaw = getRadioValue('debt-adj');
+  let 채무조정이력 = '없음';
+  if (debtAdjRaw.includes('진행'))        채무조정이력 = '현재진행중';
+  else if (debtAdjRaw.includes('과거'))   채무조정이력 = '과거완료';
+
+  const debtDeferRaw = getRadioValue('adj-defer');
+  let 상환유예이력 = '없음';
+  if (debtDeferRaw.includes('1회') && !debtDeferRaw.includes('2회')) 상환유예이력 = '1회';
+  else if (debtDeferRaw.includes('2회')) 상환유예이력 = '2회이상';
+
+  const utilLateRaw = getRadioValue('util-late');
+  let 연체여부 = '없음';
+  if (utilLateRaw.includes('1~2회'))  연체여부 = '1~2회';
+  else if (utilLateRaw.includes('3회')) 연체여부 = '3회이상';
+
+  const hhRaw = getRadioValue('hh');
+  const 가구원수 = parseInt(hhRaw) || 1;
+
+  const 자동이체동의 = document.getElementById('autodebit-agree')?.checked ? '동의' : '';
+
+  const debtRows = collectDebtRows();
+  const 부채명세배열 = debtRows.map(row => ({
+    기관명:   row.org_name || '',
+    기관유형: mapLenderType(row.lender_type),
+    종류:     row.product_type || '',
+    원금:     row.contract_amt || 0,
+    잔액:     row.balance_amt  || 0,
+    금리:     rateBandToNum(row.rate_band),
+    월상환:   row.monthly_pay  || 0
+  }));
+
+  const incWork  = getIntValue('#inc-work')  || 0;
+  const incBiz   = getIntValue('#inc-biz')   || 0;
+  const incGov   = getIntValue('#inc-gov')   || 0;
+  const incOther = getIntValue('#inc-etc')   || 0;
+
+  const expRent    = getIntValue('#exp-rent')    || 0;
+  const expFood    = getIntValue('#exp-food')    || 0;
+  const expTransit = getIntValue('#exp-transit') || 0;
+  const expComm    = getIntValue('#exp-comm')    || 0;
+  const expMedical = getIntValue('#exp-medical') || 0;
+  const expInsure  = getIntValue('#exp-insure')  || 0;
+  const expLoan    = getIntValue('#exp-loan')    || 0;
+  const expSaving  = getIntValue('#exp-saving')  || 0;
+  const expEtc     = getIntValue('#exp-etc')     || 0;
+
+  const q3El = document.getElementById('ta-crisis-buffer') || textareas[3];
+  const q3CrisisBuffer = getTextareaValue(q3El);
+  const q4FutureHope   = getTextareaValue(document.getElementById('ta-future-hope'));
+
+  const formDataKorean = {
+    소득유형:      incomeType,
+    직장유지가능성,
+    소득전망,
+    소득_근로:      incWork,
+    소득_사업:      incBiz,
+    소득_정부지원:  incGov,
+    소득_가족기타:  incOther,
+    지출_주거:      expRent,
+    지출_식비:      expFood,
+    지출_교통:      expTransit,
+    지출_통신:      expComm,
+    지출_의료:      expMedical,
+    지출_보험:      expInsure,
+    지출_부채상환:  expLoan,
+    지출_저축:      expSaving,
+    지출_기타:      expEtc,
+    부채_명세:      JSON.stringify(부채명세배열),
+    채무조정이력,
+    채무조정유형:   getRadioValue('adj-type'),
+    채무조정과거완료설명: (document.querySelector('#dadj-past textarea')?.value || '').trim(),
+    채무재조정이력: getRadioValue('adj-readj'),
+    상환유예이력,
+    연체여부,
+    가구원수,
+    부양가족여부:   getRadioValue('dependent'),
+    부양가족상세:   (document.querySelector('#dep-detail input[type="text"]')?.value || '').trim(),
+    이사계획:       getRadioValue('move-plan'),
+    거주비_보증금:  (() => { const inputs = document.querySelectorAll('#res-cost-wrap input[type="number"]'); return inputs[0] ? parseInt(inputs[0].value || 0) : null; })(),
+    거주비_월비용:  (() => { const inputs = document.querySelectorAll('#res-cost-wrap input[type="number"]'); return inputs[1] ? parseInt(inputs[1].value || 0) : (inputs[0] ? parseInt(inputs[0].value || 0) : null); })(),
+    정부지원유형:   (() => { const group = document.querySelectorAll('#page2 .section-title'); let container = null; group.forEach(el => { if (el.textContent.includes('01-5')) container = el.nextElementSibling; }); if (!container) return ''; const selected = container.querySelectorAll('.check-btn.selected'); return Array.from(selected).map(b => b.textContent.trim()).join(','); })(),
+    정부지원금총액: parseInt(document.getElementById('gov-total-amount')?.value || 0) || null,
+    생활비세부용도: getRadioValue('living-sub'),
+    위기대응수단:   (() => { const g = document.querySelectorAll('#page2 .check-group')[2]; return g ? Array.from(g.querySelectorAll('.check-btn.selected')).map(b => b.textContent.trim()).join(',') : ''; })(),
+    부채부담유형:   (() => { const g = document.querySelectorAll('#page2 .check-group')[3]; return g ? Array.from(g.querySelectorAll('.check-btn.selected')).map(b => b.textContent.trim()).join(',') : ''; })(),
+    생활고현황:     (() => { const g = document.querySelectorAll('#page2 .check-group')[4]; return g ? Array.from(g.querySelectorAll('.check-btn.selected')).map(b => b.textContent.trim()).join(',') : ''; })(),
+    자동이체동의,
+    Q1_신청배경:     getTextareaValue(document.getElementById('ta-bg-reason')),
+    Q1_1년후희망:    q4FutureHope,
+    Q2_사용상환계획: getTextareaValue(document.getElementById('ta-loan-plan')),
+    Q3_위기대응:     q3CrisisBuffer,
+    자격_연령:     '충족',
+    자격_저신용:   '충족',
+    자격_연체없음: '충족',
+    자격_체납없음: '충족'
+  };
+
+  const base = {
+    name:           document.querySelector('#page2 input[type="text"][placeholder*="실명"]')?.value || '',
+    ssn_front:      document.querySelector('#page2 input[placeholder*="앞 6자리"]')?.value || '',
+    ssn_back:       document.querySelector('#page2 input[type="password"][placeholder*="뒤 7자리"]')?.value || '',
+    phone:          document.querySelector('#page2 input[type="tel"]')?.value || '',
+    email:          document.querySelector('#page2 input[type="email"]')?.value || '',
+    addr_road:      document.getElementById('addr-road')?.value || '',
+    addr_zipcode:   document.getElementById('addr-zipcode')?.value || '',
+    addr_jibun:     document.getElementById('addr-jibun')?.value || '',
+    addr_detail:    document.getElementById('addr-detail')?.value || '',
+    residence_type: getRadioValue('res'),
+    res_deposit:    (() => { const inputs = document.querySelectorAll('#res-cost-wrap input[type="number"]'); return inputs[0] ? parseInt(inputs[0].value || 0) : null; })(),
+    res_monthly:    (() => { const inputs = document.querySelectorAll('#res-cost-wrap input[type="number"]'); return inputs[1] ? parseInt(inputs[1].value || 0) : (inputs[0] ? parseInt(inputs[0].value || 0) : null); })(),
+    move_plan:      getRadioValue('move-plan'),
+    household_size: hhRaw,
+    dependent:      getRadioValue('dependent'),
+    dependent_detail: (document.querySelector('#dep-detail input[type="text"]')?.value || '').trim(),
+    gov_support:    (() => { const group = document.querySelectorAll('#page2 .section-title'); let container = null; group.forEach(el => { if (el.textContent.includes('01-5')) container = el.nextElementSibling; }); if (!container) return ''; const selected = container.querySelectorAll('.check-btn.selected'); return Array.from(selected).map(b => b.textContent.trim()).join(','); })(),
+    gov_support_amount: parseInt(document.getElementById('gov-total-amount')?.value || 0) || null,
+    loan_purpose:   loanPurpose,
+    loan_amount:    getIntValue('#loan-amount'),
+    income_type:    incomeType,
+    income_sustain: 직장유지가능성,
+    income_change:  소득전망,
+    income_work:    incWork  || null,
+    income_biz:     incBiz   || null,
+    income_gov:     incGov   || null,
+    income_other:   incOther || null,
+    debt_rows:      debtRows,
+    debt_adjustment:      채무조정이력,
+    debt_adj_type:        getRadioValue('adj-type'),
+    debt_adj_defer:       상환유예이력,
+    debt_adj_readjust:    getRadioValue('adj-readj'),
+    debt_adj_past_desc:   (document.querySelector('#dadj-past textarea')?.value || '').trim(),
+    exp_rent:       expRent    || null,
+    exp_food:       expFood    || null,
+    exp_transit:    expTransit || null,
+    exp_comm:       expComm    || null,
+    exp_medical:    expMedical || null,
+    exp_insure:     expInsure  || null,
+    exp_loan:       expLoan    || null,
+    exp_saving:     expSaving  || null,
+    exp_etc:        expEtc     || null,
+    living_sub:     getRadioValue('living-sub'),
+    qual_age:             true,
+    qual_income:          true,
+    qual_low_credit:      true,
+    qual_no_overdue:      true,
+    qual_no_delinquency:  true,
+    q1_background:    getTextareaValue(document.getElementById('ta-bg-reason')),
+    q1_future:        q4FutureHope,
+    q2_repay_plan:    getTextareaValue(document.getElementById('ta-loan-plan')),
+    q3_crisis_buffer: q3CrisisBuffer,
+    util_late:    utilLateRaw,
+    frdi_scores:  collectFrdiScores(),
+    crisis_coping:    (() => { const g = document.querySelectorAll('#page2 .check-group')[2]; return g ? Array.from(g.querySelectorAll('.check-btn.selected')).map(b => b.textContent.trim()).join(',') : ''; })(),
+    debt_burden_type: (() => { const g = document.querySelectorAll('#page2 .check-group')[3]; return g ? Array.from(g.querySelectorAll('.check-btn.selected')).map(b => b.textContent.trim()).join(',') : ''; })(),
+    hardship_type:    (() => { const g = document.querySelectorAll('#page2 .check-group')[4]; return g ? Array.from(g.querySelectorAll('.check-btn.selected')).map(b => b.textContent.trim()).join(',') : ''; })(),
+    final_consent: document.getElementById('final-consent')?.checked || false,
+    consent_collect: document.getElementById('consent1')?.checked || false,
+    consent_inquiry: document.getElementById('consent2')?.checked || false,
+    consent_provide: document.getElementById('consent3')?.checked || false,
+    autodebit_agree: document.getElementById('autodebit-agree')?.checked || false
+  };
+
+  return { ...base, form_data: { ...base, ...formDataKorean } };
+}
+
+function getRawFiles() {
+  const rejectionFiles = [];
+  document.querySelectorAll('#eq4-attach input[type="file"]').forEach(input => {
+    if (input.files && input.files.length) {
+      rejectionFiles.push(...Array.from(input.files));
+    }
+  });
+  const debtAdjFiles = [];
+  document.querySelectorAll('#dadj-ing input[type="file"]').forEach(input => {
+    if (input.files && input.files.length) {
+      debtAdjFiles.push(...Array.from(input.files));
+    }
+  });
+  return { rejectionFiles, debtAdjFiles };
+}
+
+async function uploadFilesToSupabase(client, receiptNumber, rawFiles) {
+  const rejectionPaths = [];
+  const debtAdjPaths = [];
+  const safeReceipt = String(receiptNumber).replace(/[^A-Za-z0-9_.-]/g, '_');
+  let stamp = Date.now();
+
+  function extFromMime(file) {
+    const t = (file.type || '').toLowerCase();
+    const map = {
+      'application/pdf': 'pdf',
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/gif': 'gif',
+      'image/webp': 'webp',
+      'image/heic': 'heic',
+      'image/heif': 'heif',
+      'application/msword': 'doc',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+      'application/zip': 'zip'
+    };
+    return map[t] || 'bin';
+  }
+
+  async function uploadOne(file, kind) {
+    const ext = extFromMime(file);
+    const name =
+      kind === 'rejection'
+        ? `${safeReceipt}_rejection_${stamp++}.${ext}`
+        : `${safeReceipt}_debtadj_${stamp++}.${ext}`;
+    const path = `${safeReceipt}/${name}`;
+    const { data, error } = await client.storage
+      .from('dasibom-files')
+      .upload(path, file, { upsert: true });
+    if (error) throw new Error(`파일 업로드 실패 (${file.name}): ${error.message}`);
+    return data.path;
+  }
+
+  for (const file of rawFiles.rejectionFiles) {
+    rejectionPaths.push(await uploadOne(file, 'rejection'));
+  }
+  for (const file of rawFiles.debtAdjFiles) {
+    debtAdjPaths.push(await uploadOne(file, 'debtadj'));
+  }
+  return { rejection: rejectionPaths, debtAdj: debtAdjPaths };
+}
+
+async function submitToSupabase() {
+  const SUPABASE_URL  = 'https://xzuohrgebuudkfjxfghh.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6dW9ocmdlYnV1ZGtmanhmZ2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTEzOTksImV4cCI6MjA5MTQ4NzM5OX0.2hkGJ2IbafzVIiOKtHVbhET7fd-1dHj8ACMX7JMsQpM';
+  const submitBtn = document.querySelector('button[onclick="submitApp()"]');
+  const originalText = submitBtn ? submitBtn.textContent : '';
+
+  try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '제출 중...';
+    }
+
+    const payload = collectPayload();
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
+
+    const { data: insertData, error: insertError } = await client
+      .from('dasibom_applications')
+      .insert(payload)
+      .select('receipt_number, id')
+      .single();
+    if (insertError) throw insertError;
+
+    payload.receipt_number = insertData.receipt_number;
+
+    const rawFiles = getRawFiles();
+    const pathLists = await uploadFilesToSupabase(client, insertData.receipt_number, rawFiles);
+
+    if (pathLists.rejection.length || pathLists.debtAdj.length) {
+      const { error: updateError } = await client
+        .from('dasibom_applications')
+        .update({
+          file_rejection_proof: pathLists.rejection.length ? pathLists.rejection : null,
+          file_debt_adjustment: pathLists.debtAdj.length ? pathLists.debtAdj : null
+        })
+        .eq('id', insertData.id);
+      if (updateError) throw updateError;
+    }
+
+    // 완료 화면
+    document.getElementById('receipt-display').textContent = payload.receipt_number;
+    const nowReceipt = new Date();
+    const dateStr = nowReceipt.getFullYear() + '.' +
+      String(nowReceipt.getMonth()+1).padStart(2,'0') + '.' +
+      String(nowReceipt.getDate()).padStart(2,'0') + ' ' +
+      String(nowReceipt.getHours()).padStart(2,'0') + ':' +
+      String(nowReceipt.getMinutes()).padStart(2,'0');
+    const purposeMap = { refinance: '고금리 대환대출', living: '생계비 대출' };
+
+    const nameEl    = document.getElementById('receipt-name');
+    const dateEl    = document.getElementById('receipt-date');
+    const purposeEl = document.getElementById('receipt-purpose');
+    const amountEl  = document.getElementById('receipt-amount');
+
+    if (nameEl)    nameEl.textContent    = payload.name || '—';
+    if (dateEl)    dateEl.textContent    = dateStr;
+    if (purposeEl) purposeEl.textContent = purposeMap[payload.loan_purpose] || payload.loan_purpose || '—';
+    if (amountEl)  amountEl.textContent  = payload.loan_amount ? payload.loan_amount + ' 만원' : '—';
+
+    clearDraft();
+    goStep(3);
+
+  } catch (error) {
+    alert('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.\n\n오류: ' + error.message);
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  }
+}
+
+function printReceipt() {
+  window.print();
+}
+
+// ── 제출 시 전체 필수항목 검증 (번호 순서) ──
+async function validateAndSubmit() {
+  var checks = [];
+  var firstEmpty = null;
+
+  function isTextareaEmpty(el) {
+    if (!el) return true;
+    var val = el.value.trim();
+    if (val.length === 0) return true;
+    if (val === el.placeholder.trim()) return true;
+    if (val.startsWith('예)') || val.startsWith('예 )')) return true;
+    return false;
+  }
+
+  function addCheck(label, el) {
+    checks.push(label);
+    if (!firstEmpty && el) firstEmpty = el;
+  }
+
+  function checkInput(sel, label) {
+    var el = document.querySelector(sel);
+    if (el && el.value.trim().length === 0) addCheck(label, el);
+  }
+
+  function checkRadio(name, label) {
+    var selected = document.querySelector('#page2 .radio-btn.selected input[name="' + name + '"]');
+    if (!selected) {
+      var el = document.querySelector('input[name="' + name + '"]');
+      addCheck(label, el ? (el.closest('.form-row') || el) : null);
+    }
+  }
+
+  // === 01-1 신청자 정보 ===
+  checkInput('#page2 input[type="text"][placeholder*="실명"]', '01-1 · 성명');
+  checkInput('#page2 input[placeholder*="앞 6자리"]', '01-1 · 주민등록번호 (앞)');
+  checkInput('#page2 input[type="password"][placeholder*="뒤 7자리"]', '01-1 · 주민등록번호 (뒤)');
+  checkInput('#page2 input[type="tel"]', '01-1 · 휴대전화 번호');
+
+  // === 01-2 연락처 및 주소 ===
+  checkInput('#addr-zipcode', '01-2 · 주소 (주소 검색을 이용해 주세요)');
+  checkInput('#addr-detail', '01-2 · 상세주소');
+  checkInput('#page2 input[type="email"]', '01-2 · 이메일 주소');
+
+  // === 01-3 거주 환경 ===
+  checkRadio('res', '01-3 · 거주 형태');
+
+  // === 01-4 가구 형태 ===
+  checkRadio('hh', '01-4 · 가구원 수');
+  checkRadio('dependent', '01-4 · 부양가족 여부');
+
+  // === 02-2 채무조정 현황 ===
+  checkRadio('debt-adj', '02-2 · 채무조정 이력');
+
+  // === 02-3 신청 배경 (서술형) ===
+  var taBg = document.getElementById('ta-bg-reason');
+  if (isTextareaEmpty(taBg)) addCheck('02-3 · 신청 배경 (현재 어려움이 시작된 계기)', taBg);
+
+  // === 03-1 소득 ===
+  var incomeTypeGroup = document.querySelectorAll('#page2 .check-group')[1];
+  if (incomeTypeGroup && !incomeTypeGroup.querySelector('.check-btn.selected')) {
+    addCheck('03-1 · 소득 유형', incomeTypeGroup);
+  }
+  checkRadio('inc-sustain', '03-1 · 직장 유지 가능 여부');
+
+  var incWork = parseInt(document.getElementById('inc-work')?.value || 0);
+  var incBiz = parseInt(document.getElementById('inc-biz')?.value || 0);
+  var incGov = parseInt(document.getElementById('inc-gov')?.value || 0);
+  var incEtc = parseInt(document.getElementById('inc-etc')?.value || 0);
+  if (incWork + incBiz + incGov + incEtc === 0) {
+    addCheck('03-1 · 월 소득 (하나 이상 입력해 주세요)', document.getElementById('inc-work'));
+  }
+
+  // === 04-2 대출 계획 (서술형) ===
+  var taPlan = document.getElementById('ta-loan-plan');
+  if (isTextareaEmpty(taPlan)) addCheck('04-2 · 사용 계획과 상환 계획', taPlan);
+
+  // === 04-2 자동이체 동의 ===
+  if (!document.getElementById('autodebit-agree').checked) {
+    addCheck('04-2 · 자동이체 설정 동의', document.getElementById('autodebit-agree'));
+  }
+
+  // === 05-1 금융 생활 ===
+  checkRadio('util-late', '05-1 · 공과금 연체 여부');
+
+  // === 최종 동의 ===
+  if (!document.getElementById('final-consent').checked) {
+    addCheck('최종 제출 동의', document.getElementById('final-consent'));
+  }
+
+  // ── 결과 ──
+  if (checks.length > 0) {
+    alert('다음 항목을 확인해 주세요:\n\n• ' + checks.join('\n• '));
+    if (firstEmpty) {
+      setTimeout(function() {
+        firstEmpty.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (firstEmpty.tagName === 'TEXTAREA' || firstEmpty.tagName === 'INPUT') {
+          firstEmpty.focus();
+        }
+      }, 300);
+    }
+    return;
+  }
+
+  await submitToSupabase();
+}
+
+async function submitApp() { await validateAndSubmit(); }
+
+// ── 임시저장 버튼 ──
+function manualSave() {
+  autoSave();
+  const btn = document.getElementById('manual-save-btn');
+  const orig = btn.textContent;
+  btn.textContent = '✅ 저장 완료!';
+  btn.style.background = 'var(--success)';
+  btn.style.color = '#fff';
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.style.background = '';
+    btn.style.color = '';
+  }, 2000);
+  updateSaveStatus();
+}
+
+function updateSaveStatus() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data._saved_at) return;
+    const d = new Date(data._saved_at);
+    const timeStr = d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0') + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    const el = document.getElementById('save-status-text');
+    if (el) el.textContent = '마지막 저장: ' + timeStr;
+  } catch(e) {}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderHexaco();
+
+  // 중간저장 복원
+  const hasData = autoLoad();
+  if (hasData) {
+    updateSaveStatus();
+    // 복원 알림 배너 표시 (수동 닫기 전까지 유지)
+    const banner = document.createElement('div');
+    banner.id = 'restore-banner';
+    banner.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:200;background:#1E1E1E;color:#fff;padding:14px 20px;border-radius:10px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;gap:12px;max-width:90vw';
+    banner.innerHTML = '💾 이전 작성 내용을 불러왔습니다. <button onclick="clearDraft();location.reload()" style="background:#FFE300;color:#1E1E1E;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">삭제하고 새로 작성</button><button onclick="this.parentElement.remove()" style="background:rgba(255,255,255,.2);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap">닫기</button>';
+    document.body.appendChild(banner);
+  }
+
+  // 저장바 초기 표시
+  document.getElementById('save-bar').style.display = 'block';
+
+  // 자동저장 — 3초마다
+  setInterval(autoSave, 3000);
+
+  const p2 = document.getElementById('page2');
+  if (p2) {
+    p2.addEventListener('click', () => setTimeout(updateSurveyProgress,80));
+    p2.addEventListener('input', () => setTimeout(updateSurveyProgress,80));
+  }
+
+  // 04-1 대환 요약 영역이 화면에 보이면 자동 갱신
+  const refinEl = document.getElementById('refin-summary');
+  if (refinEl) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) loadTrackToStep2();
+      });
+    }, { threshold: 0.1 });
+    observer.observe(refinEl);
+  }
+
+  // 02-1 체크박스 변경 시 대환 요약 자동 갱신
+  const debtTbody = document.getElementById('all-debt-tbody');
+  if (debtTbody) {
+    debtTbody.addEventListener('change', (e) => {
+      if (e.target.type === 'checkbox') setTimeout(loadTrackToStep2, 100);
+    });
+  }
+});
+</script>
+</body>
+</html>
