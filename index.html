@@ -823,6 +823,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
               <label class="radio-btn" onclick="toggleRadio(this,'adj-type')"><input type="radio" name="adj-type"><div class="radio-dot"></div>개인회생</label>
               <label class="radio-btn" onclick="toggleRadio(this,'adj-type')"><input type="radio" name="adj-type"><div class="radio-dot"></div>파산·면책</label>
               <label class="radio-btn" onclick="toggleRadio(this,'adj-type')"><input type="radio" name="adj-type"><div class="radio-dot"></div>신용회복위원회 개인워크아웃</label>
+              <label class="radio-btn" onclick="toggleRadio(this,'adj-type')"><input type="radio" name="adj-type"><div class="radio-dot"></div>기타(신속채무조정, 프리워크아웃, 새출발기금 등)</label>
             </div>
           </div>
           <div class="form-row" style="margin-bottom:14px">
@@ -1897,6 +1898,24 @@ function collectPayload() {
   const incGov   = getIntValue('#inc-gov')   || 0;
   const incOther = getIntValue('#inc-etc')   || 0;
 
+  // 직장(사업체) 정보 수집
+  const employmentRows = [];
+  document.querySelectorAll('#employ-tbody tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input, select');
+    const orgName  = inputs[0]?.value.trim() || '';
+    const startMonth = inputs[1]?.value || '';
+    const duty     = inputs[2]?.value.trim() || '';
+    const jobType  = inputs[3]?.value || '';
+    if (orgName || startMonth || duty || jobType) {
+      employmentRows.push({
+        org_name:    orgName,
+        start_month: startMonth,
+        duty:        duty,
+        job_type:    jobType
+      });
+    }
+  });
+
   const expRent    = getIntValue('#exp-rent')    || 0;
   const expFood    = getIntValue('#exp-food')    || 0;
   const expTransit = getIntValue('#exp-transit') || 0;
@@ -1911,8 +1930,16 @@ function collectPayload() {
   const q3CrisisBuffer = getTextareaValue(q3El);
   const q4FutureHope   = getTextareaValue(document.getElementById('ta-future-hope'));
 
+  const 직장정보배열 = employmentRows.map(r => ({
+    직장명:     r.org_name,
+    근무시작:   r.start_month,
+    담당업무:   r.duty,
+    근무형태:   r.job_type
+  }));
+
   const formDataKorean = {
     소득유형:      incomeType,
+    직장정보:      JSON.stringify(직장정보배열),
     직장유지가능성,
     소득전망,
     소득_근로:      incWork,
@@ -1980,6 +2007,7 @@ function collectPayload() {
     loan_purpose:   loanPurpose,
     loan_amount:    getIntValue('#loan-amount'),
     income_type:    incomeType,
+    employment_rows: employmentRows,
     income_sustain: 직장유지가능성,
     income_change:  소득전망,
     income_work:    incWork  || null,
