@@ -1594,6 +1594,22 @@ function autoSave() {
     });
     // 부채 없음
     data['no_debt'] = document.getElementById('no-debt-check')?.checked || false;
+    // 부채 명세 통째로 저장 (month input 포함)
+    data['saved_debt_rows'] = collectDebtRows();
+    // 직장 정보 통째로 저장
+    try {
+      const empRows = [];
+      document.querySelectorAll('#employ-tbody tr').forEach(tr => {
+        const inputs = tr.querySelectorAll('input, select');
+        empRows.push({
+          org_name: inputs[0]?.value || '',
+          start_month: inputs[1]?.value || '',
+          duty: inputs[2]?.value || '',
+          job_type: inputs[3]?.value || ''
+        });
+      });
+      data['saved_employ_rows'] = empRows;
+    } catch(e) {}
     // 자동이체 동의
     data['autodebit'] = document.getElementById('autodebit-agree')?.checked || false;
     // 최종동의
@@ -1719,6 +1735,58 @@ function autoLoad() {
     if (data['no_debt']) {
       document.getElementById('no-debt-check').checked = true;
       toggleNoDebt();
+    }
+    // 부채 명세 복원 (month input 포함)
+    if (data['saved_debt_rows'] && data['saved_debt_rows'].length > 0) {
+      const tbody = document.getElementById('all-debt-tbody');
+      if (tbody) {
+        const savedRows = data['saved_debt_rows'];
+        // 기존 행 수 확인, 부족하면 추가
+        while (tbody.querySelectorAll('tr').length < savedRows.length) {
+          addDebtRow();
+        }
+        tbody.querySelectorAll('tr').forEach((tr, i) => {
+          if (!savedRows[i]) return;
+          const r = savedRows[i];
+          const selects = tr.querySelectorAll('select');
+          const textInputs = tr.querySelectorAll('input[type="text"]');
+          const numberInputs = tr.querySelectorAll('input[type="number"]');
+          const monthInputs = tr.querySelectorAll('input[type="month"]');
+          // select 값 복원 (option text 매칭)
+          [r.lender_type, r.product_type, r.rate_band].forEach((val, si) => {
+            if (val && selects[si]) {
+              for (let o = 0; o < selects[si].options.length; o++) {
+                if (selects[si].options[o].text === val || selects[si].options[o].value === val) {
+                  selects[si].selectedIndex = o; break;
+                }
+              }
+            }
+          });
+          if (r.org_name && textInputs[0]) textInputs[0].value = r.org_name;
+          if (r.contract_amt != null && numberInputs[0]) numberInputs[0].value = r.contract_amt;
+          if (r.balance_amt != null && numberInputs[1]) numberInputs[1].value = r.balance_amt;
+          if (r.monthly_pay != null && numberInputs[2]) numberInputs[2].value = r.monthly_pay;
+          if (r.start_month && monthInputs[0]) monthInputs[0].value = r.start_month;
+          if (r.end_month && monthInputs[1]) monthInputs[1].value = r.end_month;
+        });
+        syncDebtTotal();
+      }
+    }
+    // 직장 정보 복원
+    if (data['saved_employ_rows'] && data['saved_employ_rows'].length > 0) {
+      document.querySelectorAll('#employ-tbody tr').forEach((tr, i) => {
+        const r = data['saved_employ_rows'][i];
+        if (!r) return;
+        const inputs = tr.querySelectorAll('input, select');
+        if (r.org_name && inputs[0]) inputs[0].value = r.org_name;
+        if (r.start_month && inputs[1]) inputs[1].value = r.start_month;
+        if (r.duty && inputs[2]) inputs[2].value = r.duty;
+        if (r.job_type && inputs[3]) {
+          for (let o = 0; o < inputs[3].options.length; o++) {
+            if (inputs[3].options[o].text === r.job_type) { inputs[3].selectedIndex = o; break; }
+          }
+        }
+      });
     }
     // 자동이체
     if (data['autodebit']) document.getElementById('autodebit-agree').checked = true;
