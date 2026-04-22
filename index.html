@@ -511,21 +511,23 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
               <li>대출거래의 설정, 유지, 이행 및 사후관리(상환관리, 연체관리 등)</li>
               <li>민원 처리 및 분쟁 해결</li>
               <li>사업 운영, 성과 분석 및 통계 작성</li>
+              <li>동일인의 중복 신청 여부 확인 및 부정 수혜 방지</li>
             </ul>
             <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">2. 수집 항목</p>
             <ul style="margin:0 0 12px 16px;padding:0">
               <li><strong>개인(신용)정보:</strong> 성명, 생년월일, 성별, 연락처, 주소, 이메일, 직업, 소득, 재산, 채무 등 신청서에 기재된 정보 및 신청인이 제공한 정보</li>
-              <li><strong>본인확인정보:</strong> 휴대폰번호, DI, CI</li>
+              <li><strong>본인확인정보:</strong> 휴대폰번호, DI, CI (동일인 식별 및 중복 신청 방지를 위한 최소 식별정보 포함)</li>
             </ul>
             <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">3. 주민등록번호 처리 안내</p>
             <ul style="margin:0 0 12px 16px;padding:0">
-              <li>사회연대은행은 관련 법령에 따라 필요한 경우에 한하여 주민등록번호를 제한적으로 처리하며, 해당 정보는 암호화하여 안전하게 보관됩니다.</li>
+              <li>(사)함께만드는세상은 관련 법령에 따라 필요한 경우에 한하여 주민등록번호를 제한적으로 처리하며, 해당 정보는 암호화하여 안전하게 보관됩니다.</li>
               <li>주민등록번호는 업무 처리 과정에서 직접 활용되지 않으며, 내부적으로는 DI 기반의 고객식별통합자(CID)를 통해 고객 식별 및 관리가 이루어집니다.</li>
             </ul>
             <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">4. 보유 및 이용기간</p>
             <ul style="margin:0 0 12px 16px;padding:0">
               <li>대출 신청일로부터 상환 완료 시까지</li>
               <li>단, 관계 법령에 따라 보존할 필요가 있는 경우 해당 기간까지 보관</li>
+              <li>또한 서비스 부정이용 방지 및 동일인 중복 지원 방지를 위하여 필요한 최소한의 식별정보는 탈퇴일로부터 5년간 별도의 데이터베이스(DB)에 분리 보관 후 파기됩니다.</li>
             </ul>
             <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">5. 동의 거부 및 불이익</p>
             <ul style="margin:0 0 0 16px;padding:0">
@@ -611,12 +613,148 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
             </ul>
             <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">5. 제공 범위 및 제한</p>
             <ul style="margin:0 0 12px 16px;padding:0">
-              <li>제공된 정보는 상기 목적 범위 내에서만 이용되며, 제3자에게 추가 제공되거나 신용정보집중기관 등에 등록되지 않습니다.</li>
+              <li>제공된 정보는 상기 목적 범위 내에서만 이용되며, 관련 법령에 따라 필요한 경우를 제외하고 제3자에게 추가 제공되지 않습니다.</li>
             </ul>
             <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">6. 동의 거부 및 불이익</p>
             <ul style="margin:0 0 0 16px;padding:0">
               <li>신청인은 개인(신용)정보 제3자 제공에 대한 동의를 거부할 수 있습니다.</li>
               <li>다만, 동의를 거부할 경우 대출 실행 및 이용이 제한될 수 있습니다.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 동의 4: 회원 이용약관 (신설) -->
+        <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;gap:8px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;font-size:13px">
+              <input type="checkbox" id="consent4" style="margin-top:1px;accent-color:var(--primary);width:16px;height:16px;flex-shrink:0" onchange="checkAllConsents()">
+              <span><strong style="color:var(--text)">[필수]</strong> <span style="color:var(--text)">회원 이용약관 동의</span></span>
+            </label>
+            <button onclick="toggleConsentDetail('consent4-detail')" style="background:none;border:1px solid var(--gray-300);border-radius:4px;padding:4px 10px;font-size:11px;color:var(--gray-500);cursor:pointer;white-space:nowrap;font-family:inherit">내용 보기</button>
+          </div>
+          <div id="consent4-detail" style="display:none;border-top:1px solid var(--gray-200);padding:16px;background:#fff;font-size:12px;color:var(--text-muted);line-height:1.8">
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">제1조 (목적 및 정의)</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>이용약관은 (사)함께만드는세상(이하 "법인"이라 한다)이 회원에게 제공하는 사업 신청 관련 온라인 서비스(이하 "서비스"라 한다)를 이용함에 있어 법인과 회원간의 권리, 의무 및 이용에 관한 제반 사항 등을 규정함을 목적으로 합니다.</li>
+              <li>이 약관에서 사용하는 용어의 정의는 다음과 같습니다.
+                <ul style="margin:6px 0 0 16px;padding:0">
+                  <li>"회원"이라 함은 법인의 온라인 사이트에 접속하여 본 약관에 따라 법인이 제공하는 서비스를 이용하는 온라인회원 및 오프라인회원을 말합니다.</li>
+                  <li>"온라인회원"이라 함은 법인이 제공하는 서비스를 받기 위하여 법인과 이용계약을 체결한 자를 말합니다.</li>
+                  <li>"오프라인회원"이라 함은 온라인으로 회원에 가입하지 않고 서비스를 이용하는 자를 말합니다.</li>
+                  <li>"사업신청"이라 함은 법인에서 제공하는 사업의 신청을 위해 관련 신청 서류를 온라인을 통해 법인에 제출하는 것을 말합니다.</li>
+                  <li>"회원탈퇴"라 함은 온라인회원이 법인의 서비스 이용계약을 해약하는 것을 말합니다.</li>
+                  <li>"회원계정(ID 등)"이라 함은 향후 서비스 운영을 위하여 회원 식별을 목적으로 부여되는 고유 식별정보를 말하며, 별도의 계정 체계가 도입되는 경우에 한하여 적용됩니다.</li>
+                </ul>
+              </li>
+            </ul>
+
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">제2조 (약관의 게시와 개정)</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>법인은 이 약관의 내용을 확인할 수 있도록 회원 가입 시 게시합니다.</li>
+              <li>법인은 "약관의규제에관한법률", "개인정보보호법" 등 관련법을 위배하지 않는 범위에서 이 약관을 개정할 수 있습니다.</li>
+              <li>법인이 약관을 개정할 경우에는 적용일자 및 개정사유를 명시하여 현행약관과 함께 법인의 홈페이지에 공지합니다.</li>
+              <li>전항에 따라 시행일 이후에 회원이 서비스를 이용하는 경우에는 개정약관에 동의한 것으로 간주합니다. 회원은 변경된 약관에 동의하지 않을 경우 이용계약을 해지할 수 있습니다.</li>
+              <li>공지일로부터 개정약관 시행일 7일 후까지 거부의사를 표시하지 아니하면 회원이 개정약관에 동의한 것으로 봅니다.</li>
+              <li>변경된 약관에 대한 정보를 알지 못해 발생하는 피해는 법인이 책임을 지지 않습니다.</li>
+            </ul>
+
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">제3조 (이용계약 체결)</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>이용계약은 회원이 본 이용약관 내용에 대해 동의하고 법인의 이용승낙으로 성립합니다.</li>
+              <li>회원은 회원등록 당시 본 약관을 읽고 동의서에 표시를 한 후 다음 버튼을 누름으로써 본 약관에 동의하는 것으로 인정됩니다.</li>
+              <li>회원으로 가입하여 본 서비스를 이용하고자 하는 이용자는 법인에서 요청하는 정보(이름, 주민등록번호, 연락처 등)를 제공하여야 합니다. 단 회원이 제공한 정보는 개인정보보호정책에 따라 관리됩니다.</li>
+              <li>법인은 회원 신청에 대하여 서비스 이용을 승낙함을 원칙으로 합니다. 다만, 법인은 다음 각 호에 해당하는 회원 신청에 대하여는 승낙을 하지 않거나 사후에 이용계약을 해지할 수 있습니다.
+                <ul style="margin:6px 0 0 16px;padding:0">
+                  <li>① 실명이 아니거나 타인의 명의를 도용한 경우</li>
+                  <li>② 허위의 정보를 기재하거나, 법인이 제시하는 필수 내용을 기재하지 않은 경우</li>
+                  <li>③ 형법에서 규정한 범죄 행위의 목적으로 본 서비스를 이용하고자 하는 경우</li>
+                  <li>④ 14세 미만 아동이 법정대리인(부모 등)의 동의를 얻지 아니한 경우</li>
+                  <li>⑤ 기타 현행 법령에 위배되는 목적으로 본 서비스를 이용하고자 하는 경우</li>
+                  <li>⑥ 이용자의 귀책사유로 인하여 승인이 불가능하거나 기타 규정 제반 사항을 위반하며 신청하는 경우</li>
+                </ul>
+              </li>
+            </ul>
+
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">제4조 (서비스 이용신청)</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>회원으로 가입하여 본 서비스를 이용하고자 하는 이용자는 법인이 요청하는 제반정보를 제공하여야 합니다.</li>
+              <li>법인은 필요 시 실명확인 및 본인인증을 요청할 수 있습니다.</li>
+              <li>법인은 회원 가입을 승낙하지 아니하거나 유보한 경우 이를 신청자에게 알려드립니다.</li>
+              <li>법인은 기술상 또는 업무상 문제가 있는 경우에는 승낙을 유보할 수 있습니다.</li>
+              <li>이용계약의 성립 시기는 법인이 가입완료를 표시한 시점으로 합니다.</li>
+            </ul>
+
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">제5조 (회원 아이디 부여 및 정보변경)</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>법인은 향후 서비스 운영상 필요한 경우 회원 식별을 위하여 회원계정(ID 등)을 부여할 수 있습니다.</li>
+              <li>회원계정(ID 등)이 도입되는 경우 해당 계정은 원칙적으로 변경이 불가하며, 부득이한 경우 법인이 정한 절차에 따라 변경할 수 있습니다.</li>
+              <li>회원은 나의 정보 메뉴를 통하여 자신의 개인정보를 변경할 수 있습니다.</li>
+              <li>회원은 회원가입신청 시 기재한 사항이 변경되었을 경우 이를 즉시 수정하거나 법인에 알려야 합니다.</li>
+              <li>전항의 변경사항을 법인에 알리지 않아 발생한 불이익에 대하여 법인은 책임을 지지 않습니다.</li>
+              <li>회원계정(ID 등)이 도입되는 경우, 해당 계정 및 인증수단의 관리 책임은 회원에게 있으며, 이를 소홀히 관리하여 발생하는 손해에 대한 책임은 회원에게 있습니다.</li>
+              <li>회원은 계정 도용 또는 제3자 사용 사실을 인지한 경우 즉시 법인에 통지하여야 합니다.</li>
+            </ul>
+
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">제6조 (법인의 의무)</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>법인은 안정적인 서비스 제공을 위해 노력합니다.</li>
+              <li>장애 발생 시 신속히 복구합니다.</li>
+              <li>개인정보 보호를 위한 보안체계를 유지합니다.</li>
+              <li>회원의 불만을 처리합니다.</li>
+            </ul>
+
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">제7조 (회원의 의무)</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>회원은 관련 법령 및 본 약관을 준수하여야 합니다.</li>
+              <li>회원계정(ID 등)이 도입되는 경우 회원은 해당 계정 및 인증정보를 직접 관리하여야 합니다.</li>
+              <li>회원은 다음 행위를 하여서는 안 됩니다.
+                <ul style="margin:6px 0 0 16px;padding:0">
+                  <li>① 허위 정보 등록</li>
+                  <li>② 타인 정보 도용</li>
+                  <li>③ 시스템 해킹 또는 변경</li>
+                  <li>④ 정보 무단 변경</li>
+                  <li>⑤ 개인정보 무단 수집</li>
+                  <li>⑥ 서비스 방해</li>
+                  <li>⑦ 지적재산권 침해</li>
+                  <li>⑧ 기타 불법 행위</li>
+                </ul>
+              </li>
+              <li>회원은 법인이 운영하는 각종 기금 및 지원사업에 대하여 동일인이 복수의 계정을 이용하거나 기타 부정한 방법으로 중복 신청 또는 중복 수혜를 받아서는 안 됩니다.</li>
+              <li>법인은 동일인의 중복 신청 여부 및 부정 이용 여부를 확인하기 위하여 회원의 서비스 이용 이력 및 사업 신청 이력을 관련 법령 및 개인정보처리방침에 따라 관리·활용할 수 있습니다.</li>
+            </ul>
+
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">제8조 (계약 해지 및 이용제한 등)</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>회원은 언제든지 탈퇴할 수 있습니다. 탈퇴 후에도 법령에 따라 일부 정보는 보관될 수 있습니다.</li>
+              <li>회원 탈퇴 시 개인정보는 원칙적으로 파기됩니다. 다만, 서비스 부정이용 방지 및 동일인 중복 지원 방지를 위하여 필요한 최소한의 식별정보는 개인정보처리방침에 따라 탈퇴일로부터 5년간 별도의 데이터베이스(DB)에 분리 보관 후 파기될 수 있습니다.</li>
+              <li>법인은 다음 경우 서비스 이용을 제한할 수 있습니다.
+                <ul style="margin:6px 0 0 16px;padding:0">
+                  <li>① 서비스 운영 방해</li>
+                  <li>② 명의도용 및 불법행위</li>
+                  <li>③ 공공기관 요청</li>
+                  <li>④ 약관 위반</li>
+                </ul>
+              </li>
+            </ul>
+
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">제9조 (면책조항 및 손해배상)</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>법인은 천재지변 또는 이에 준하는 불가항력으로 인하여 서비스를 제공할 수 없는 경우에는 서비스 제공에 관한 책임이 면제됩니다.</li>
+              <li>법인은 회원의 귀책사유로 인한 서비스 이용의 장애 또는 손해에 대하여 책임을 지지 않습니다.</li>
+              <li>법인은 회원이 서비스와 관련하여 게재한 정보, 자료, 사실의 신뢰도, 정확성 등의 내용에 관하여는 책임을 지지 않습니다.</li>
+              <li>법인은 회원 간 또는 회원과 제3자 상호간에 서비스를 매개로 하여 거래 등을 한 경우에는 책임이 면제됩니다.</li>
+            </ul>
+
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">제10조 (분쟁조정 및 정보제공 통지)</p>
+            <ul style="margin:0 0 12px 16px;padding:0">
+              <li>이 약관에 명시되어 있지 않은 사항은 관계법령에 따릅니다.</li>
+              <li>서비스 이용으로 발생한 분쟁에 대해 소송이 제기되는 경우 법령에 따른 법원을 관할 법원으로 합니다.</li>
+              <li>법인은 회원에게 필요한 정보를 공지사항, 이메일, SMS 등의 방법으로 제공할 수 있습니다.</li>
+            </ul>
+
+            <p style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">부칙</p>
+            <ul style="margin:0 0 0 16px;padding:0">
+              <li>본 약관은 2026년 4월 20일부터 적용됩니다.</li>
             </ul>
           </div>
         </div>
@@ -1095,7 +1233,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
         <span>위 내용이 모두 사실임을 확인하며, 허위 기재 시 대출이 거절될 수 있음에 동의합니다. 추가 서류 제출 및 비대면 상담에 응할 것에 동의합니다.</span>
       </label>
       <button class="btn btn-primary" onclick="submitApp()" style="max-width:400px;margin:0 auto">✉️ 신청서 최종 제출</button>
-      <p style="font-size:12px;color:var(--text-muted);margin-top:12px">담당자가 확인 후 연락드립니다.</p>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:12px">담당자가 확인 후 연락드릴 예정입니다(최대 2주 소요)</p>
     </div>
   </div>
   <div class="btn-group"><button class="btn-back" onclick="goStep(1)">← 이전</button></div>
@@ -1115,7 +1253,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #F5F5F0; color: var(
         <div>희망 금액 &nbsp;<span id="receipt-amount" style="color:var(--text-muted)">—</span></div>
       </div>
       <p style="font-size:14px;color:var(--text-muted);line-height:1.8">
-        담당자가 확인 후 연락드립니다.<br>
+        담당자가 확인 후 연락드릴 예정입니다(최대 2주 소요)<br>
         작성해주셔서 감사합니다.<br><br>
         <span style="color:var(--warning);font-size:13px">📅 추가 서류 제출은 필요 시 담당자가 안내해 드립니다</span><br><br>
         <span style="font-size:12px;color:var(--text-muted)">함께만드는세상 · 카카오뱅크 · 신용회복위원회</span>
@@ -1491,7 +1629,8 @@ function checkAllConsents() {
   const c1 = document.getElementById('consent1').checked;
   const c2 = document.getElementById('consent2').checked;
   const c3 = document.getElementById('consent3').checked;
-  const all = c1 && c2 && c3;
+  const c4 = document.getElementById('consent4').checked;
+  const all = c1 && c2 && c3 && c4;
   // 전체 동의 체크박스 연동
   document.getElementById('consent-all').checked = all;
   // 경고 표시
@@ -1506,6 +1645,7 @@ function toggleConsentAll() {
   document.getElementById('consent1').checked = allChecked;
   document.getElementById('consent2').checked = allChecked;
   document.getElementById('consent3').checked = allChecked;
+  document.getElementById('consent4').checked = allChecked;
   checkAllConsents();
 }
 function toggleConsentDetail(id) {
@@ -1521,7 +1661,7 @@ function toggleConsentDetail(id) {
   }
 }
 function goStepWithConsent() {
-  const all = document.getElementById('consent1').checked && document.getElementById('consent2').checked && document.getElementById('consent3').checked;
+  const all = document.getElementById('consent1').checked && document.getElementById('consent2').checked && document.getElementById('consent3').checked && document.getElementById('consent4').checked;
   if (!all) {
     document.getElementById('consent-warning').style.display = 'block';
     return;
@@ -1562,6 +1702,7 @@ function autoSave() {
     data['consent1'] = document.getElementById('consent1')?.checked || false;
     data['consent2'] = document.getElementById('consent2')?.checked || false;
     data['consent3'] = document.getElementById('consent3')?.checked || false;
+    data['consent4'] = document.getElementById('consent4')?.checked || false;
 
     // === page2: 신청서 전체 ===
     // 모든 input (id가 있는 것)
@@ -1680,8 +1821,9 @@ function autoLoad() {
     if (data['consent1']) document.getElementById('consent1').checked = true;
     if (data['consent2']) document.getElementById('consent2').checked = true;
     if (data['consent3']) document.getElementById('consent3').checked = true;
+    if (data['consent4']) document.getElementById('consent4').checked = true;
     // 전체 동의 체크박스 연동
-    const allConsent = document.getElementById('consent1')?.checked && document.getElementById('consent2')?.checked && document.getElementById('consent3')?.checked;
+    const allConsent = document.getElementById('consent1')?.checked && document.getElementById('consent2')?.checked && document.getElementById('consent3')?.checked && document.getElementById('consent4')?.checked;
     if (document.getElementById('consent-all')) document.getElementById('consent-all').checked = allConsent;
     checkAllConsents();
 
@@ -2116,6 +2258,7 @@ function collectPayload() {
     consent_collect: document.getElementById('consent1')?.checked || false,
     consent_inquiry: document.getElementById('consent2')?.checked || false,
     consent_provide: document.getElementById('consent3')?.checked || false,
+    consent_terms:   document.getElementById('consent4')?.checked || false,
     autodebit_agree: document.getElementById('autodebit-agree')?.checked || false
   };
 
